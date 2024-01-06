@@ -34,6 +34,7 @@ const EventForm = () => {
                 getUserName(user);
             } else {
                 setUser(null);
+                navigate('/login');
             }
         });
 
