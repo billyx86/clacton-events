@@ -7,6 +7,7 @@ import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup'
 import EventDetails from './pages/EventDetails';
 import ListEvent from './pages/posting/EventForm';
+import Profile from './pages/profile/Profile';
 
 const Main = () => {
   return (
@@ -17,6 +18,7 @@ const Main = () => {
         <Route path="/signup" element={ <Signup /> } />
         <Route path="/event/:id" component={EventDetails} />
         <Route path="/list-event" element={ <ListEvent />} />
+        <Route path="/profile" element={ <Profile />} />
     </Routes>
   );
 }

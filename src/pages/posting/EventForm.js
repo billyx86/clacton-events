@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { collection, addDoc, serverTimestamp, doc, getDoc, writeBatch } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../../firebase";
+import { useNavigate } from 'react-router-dom';
+import '../../styles/posting/EventForm.css'
 
 const EventForm = () => {
     const [formData, setFormData] = useState({
@@ -14,6 +16,7 @@ const EventForm = () => {
     });
     const [user, setUser] = useState(null);
     const [loggedInName, setLoggedInName] = useState('');
+    const navigate  = useNavigate();
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -74,8 +77,9 @@ const EventForm = () => {
 
             // Commit the batch
             await batch.commit();
-            alert("Event successfully listed!");
+            console.log("Event successfully listed!");
             setFormData({ content: '', shortDescription: '', longDescription: '', location: '', imageUrl: '' }); // Reset form
+            navigate('/events');
         } catch (error) {
             console.error("Error listing event: ", error);
         }
@@ -83,6 +87,7 @@ const EventForm = () => {
 
     return (
         <div className="event-form-container">
+            <h1>List an Event</h1>
             <form onSubmit={handleSubmit}>
                 <input 
                     type="text" 

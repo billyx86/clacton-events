@@ -2,7 +2,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh; /* Adjust based on your layout */
+    height: calc(100vh - calc(2vh + 30px));
     background-color: #f4f4f4;
 }
 
@@ -11,7 +11,7 @@
     padding: 20px;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    width: 300px; /* Adjust as necessary */
+    width: 300px;
 }
 
 .signup-form input {
