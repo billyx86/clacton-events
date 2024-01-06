@@ -4,6 +4,7 @@ import { collection, addDoc, serverTimestamp, doc, getDoc, writeBatch } from "fi
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../../firebase";
 import { useNavigate } from 'react-router-dom';
+import axios from "axios";
 import '../../styles/posting/EventForm.css'
 
 const EventForm = () => {
@@ -16,7 +17,14 @@ const EventForm = () => {
     });
     const [user, setUser] = useState(null);
     const [loggedInName, setLoggedInName] = useState('');
+    const [ip, setIP] = useState("");
     const navigate  = useNavigate();
+
+    const getData = async () => {
+        const res = await axios.get("https://api.ipify.org/?format=json");
+        console.log(res.data);
+        setIP(res.data.ip);
+      };
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -38,6 +46,8 @@ const EventForm = () => {
                 console.log("No such document!");
             }
         }
+
+        getData();
 
         return unsubscribe; // Cleanup subscription on unmount
     }, []);
@@ -69,7 +79,9 @@ const EventForm = () => {
                 id: newCount,
                 ...formData,
                 createdOn: serverTimestamp(),
-                author: loggedInName
+                author: loggedInName,
+                emailOfAuthor: user.email,
+                ipOfAuthor: ip
             };
             
             const newEventRef = doc(collection(db, "events"));

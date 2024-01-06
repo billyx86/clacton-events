@@ -2,23 +2,35 @@
 import React, { useEffect, useState } from "react";
 import Event from '../components/Event';
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth, db } from "../firebase";
 import { useNavigate } from 'react-router-dom';
 
 const EventsPage = () => {
     const [events, setEvents] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
+    const [user, setUser] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchEvents = async () => {
-            const eventsCollectionRef = collection(db, "events");
-            const eventsSnapshot = await getDocs(eventsCollectionRef);
-            const eventsList = eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setEvents(eventsList);
-        };
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
+        if (user) {
+            setUser(user);
+        } else {
+            setUser(null);
+        }
+      });
 
-        fetchEvents();
+      const fetchEvents = async () => {
+          const eventsCollectionRef = collection(db, "events");
+          const eventsSnapshot = await getDocs(eventsCollectionRef);
+          const eventsList = eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          setEvents(eventsList);
+      };
+
+      fetchEvents();
+
+      return unsubscribe;
     }, []);
 
     function handleSearchInput(event) {
@@ -35,9 +47,15 @@ const EventsPage = () => {
                 </div>
             </div>
 
+            {user ? (
             <div className="le-button-wrapper">
               <button onClick={() => navigate('/list-event')} className="list-event-button">List Event</button>
             </div>
+            ) : (
+              <div className="le-button-wrapper">
+                <h2>Log in to post an event.</h2>
+              </div>
+            )}
 
             <div className="main-wrapper">
                 <div className="main-container">
