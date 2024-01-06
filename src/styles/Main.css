@@ -19,7 +19,7 @@ main {
 }
 
 .main-wrapper {
-    max-width: 1920px;
+    max-width: 2560px;
     margin: 0 auto;
     margin-bottom: 64px;
     display: grid;
@@ -30,12 +30,20 @@ main {
 
 .search-wrapper {
     max-width: 800px;
+    width: clamp(100px, 80vw, 800px);
     margin: 0 auto;
+}
+
+.le-button-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
 }
 
 .main-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     grid-gap: 20px;
     padding: 20px;
 }
@@ -81,7 +89,6 @@ h1 {
     }
 
     .search-container {
-        margin: 24px 24px 24px 24px;
         display: flex;
         flex-direction: column;
         justify-content: center;

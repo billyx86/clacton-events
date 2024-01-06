@@ -6,6 +6,7 @@ import EventsPage from './pages/EventsPage';
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup'
 import EventDetails from './pages/EventDetails';
+import ListEvent from './pages/posting/EventForm';
 
 const Main = () => {
   return (
@@ -15,6 +16,7 @@ const Main = () => {
         <Route path="/login" element={ <Login /> } />
         <Route path="/signup" element={ <Signup /> } />
         <Route path="/event/:id" component={EventDetails} />
+        <Route path="/list-event" element={ <ListEvent />} />
     </Routes>
   );
 }
