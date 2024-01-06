@@ -1,0 +1,40 @@
+{
+  "events": [
+    {
+      "id": 1,
+      "content": "Beach Clean-Up Day",
+      "description": "Join us for a community beach clean-up",
+      "imageURL": "https://via.placeholder.com/150"
+    },
+    {
+      "id": 2,
+      "content": "Local Art Exhibition",
+      "description": "Discover local artists at the town hall.Discover local artists at the town hall.Discover local artists at the town hall.Discover local artists at the town hall.Discover local artists at the town hall.",
+      "imageURL": "https://via.placeholder.com/150"
+    },
+    {
+      "id": 3,
+      "content": "Lorem Ipsum",
+      "description": "Test",
+      "imageURL": "https://via.placeholder.com/150"
+    },
+    {
+      "id": 4,
+      "content": "Lorem Ipsum",
+      "description": "Test",
+      "imageURL": "https://via.placeholder.com/150"
+    },
+    {
+      "id": 5,
+      "content": "Lorem Ipsum",
+      "description": "Test",
+      "imageURL": "https://via.placeholder.com/150"
+    },
+    {
+      "id": 6,
+      "content": "Lorem Ipsum",
+      "description": "Test",
+      "imageURL": "https://via.placeholder.com/150"
+    }
+  ]
+}
