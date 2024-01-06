@@ -25,7 +25,9 @@ const EventsPage = () => {
           const eventsCollectionRef = collection(db, "events");
           const eventsSnapshot = await getDocs(eventsCollectionRef);
           const eventsList = eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          setEvents(eventsList);
+          const sortedEvents = eventsList.sort((a, b) => b.id - a.id);
+          
+          setEvents(sortedEvents);
       };
 
       fetchEvents();
@@ -67,6 +69,7 @@ const EventsPage = () => {
                             description={filteredEvent.shortDescription} 
                             imageUrl={filteredEvent.imageUrl} 
                             location={filteredEvent.location}
+                            date={filteredEvent.date}
                         />
                     ))}
                 </div>

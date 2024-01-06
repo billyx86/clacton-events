@@ -1,6 +1,6 @@
 // EventForm.js
 import React, { useState, useEffect } from 'react';
-import { collection, addDoc, serverTimestamp, doc, getDoc, writeBatch } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, getDoc, writeBatch, Timestamp  } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../../firebase";
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,7 @@ const EventForm = () => {
         shortDescription: '',
         longDescription: '',
         location: '',
+        date: '',
         imageUrl: ''
     });
     const [user, setUser] = useState(null);
@@ -56,6 +57,11 @@ const EventForm = () => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
+    const convertDateStringToTimestamp = (dateString) => {
+        const dateObj = new Date(dateString);
+        return Timestamp.fromDate(dateObj);
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -74,10 +80,14 @@ const EventForm = () => {
                 batch.set(counterRef, { count: newCount });
             }
 
+            // Convert date string to Firestore timestamp
+            const eventDate = convertDateStringToTimestamp(formData.date);
+
             // Create the new event with the incremented count
             const newEvent = {
                 id: newCount,
                 ...formData,
+                date: eventDate,
                 createdOn: serverTimestamp(),
                 author: loggedInName,
                 emailOfAuthor: user.email,
@@ -130,6 +140,14 @@ const EventForm = () => {
                     value={formData.location} 
                     onChange={handleChange} 
                     placeholder="Location" 
+                    required 
+                />
+                <input 
+                    type="datetime-local" 
+                    name="date" 
+                    value={formData.date}
+                    onChange={handleChange}
+                    placeholder="Date (DD/MM/YY HH:MM)" 
                     required 
                 />
                 <input 

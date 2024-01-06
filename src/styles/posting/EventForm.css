@@ -14,6 +14,7 @@
 }
 
 .event-form-container input[type="text"],
+.event-form-container input[type="datetime-local"],
 .event-form-container textarea {
     padding: 10px;
     border: 1px solid #ccc;
@@ -45,3 +46,4 @@
 .event-form-container textarea::placeholder {
     color: #888;
 }
+

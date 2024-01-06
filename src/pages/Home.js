@@ -37,7 +37,7 @@ const Home = () => {
       <div className="main-wrapper">
         <h1>Welcome to Clacton Events!</h1>
         <div className="trending-events">
-        <h2>Current Events</h2>
+        <h2>Recently Posted Events</h2>
         <div className="home-events-container">
             {events.map(event => (
               <div className="home-event" key={event.id}>
@@ -47,6 +47,8 @@ const Home = () => {
                   title={event.content} // or event.title, depending on your data structure
                   description={event.shortDescription} // or appropriate field
                   imageUrl={event.imageUrl} // or appropriate field
+                  location={event.location}
+                  date={event.date}
                 />
               </div>
             ))}

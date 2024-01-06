@@ -2,8 +2,23 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/Event.css';
 
-const Event = ({ id, title, description, imageUrl, location }) => {
+const Event = ({ id, title, description, imageUrl, location, date }) => {
     const navigate = useNavigate();
+
+    const formatDate = (timestamp) => {
+        if (!timestamp) return '';
+        // Convert Firestore Timestamp to JavaScript Date object
+        const dateObj = new Date(timestamp.seconds * 1000);
+        // Format the date
+        const formattedDate = dateObj.toLocaleDateString('en-GB', {
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit'
+        });
+        return formattedDate;
+    };
 
     const navigateToEventDetails = () => {
         navigate(`/events/${id}`); // Navigate to the event's page
@@ -21,6 +36,12 @@ const Event = ({ id, title, description, imageUrl, location }) => {
                         Location: 
                     </span> 
                     {location}
+                </p>
+                <p className="event-location">
+                    <span className="location-bold">
+                        Date: 
+                    </span> 
+                    {formatDate(date)}
                 </p>
                 <button className="event-details-button" onClick={navigateToEventDetails}>View Details</button>
             </div>
