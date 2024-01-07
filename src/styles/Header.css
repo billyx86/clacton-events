@@ -62,8 +62,16 @@
 .nav a {
     color: white;
     text-decoration: none;
-    padding: 5px 10px;
+    padding: 10px;
+    border-radius: 8px;
 }
+
+.nav a:hover {
+    background-color: white;
+    color: rgba(0, 115, 230, 0.9);
+}
+
+/* rgba(0, 115, 230, 0.9) */
 
 .auth-buttons a {
     background-color: white;
@@ -79,6 +87,13 @@
     color: white;
     font-size: 1em;
     cursor: pointer;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.user-menu .user-menu-button:hover {
+    background-color: white;
+    color: rgba(0, 115, 230, 0.9);
 }
 
 .user-menu {
@@ -117,6 +132,10 @@
 
 .user-menu .dropdown.show {
     display: block;
+}
+
+p, a {
+    font-family: Arial, Helvetica, sans-serif;
 }
 
 @media screen and (max-width: 768px) {

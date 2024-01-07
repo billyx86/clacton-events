@@ -55,6 +55,10 @@
         grid-template-columns: 1fr;
         text-align: center;
     }
+    
+    h3 {
+        margin-top: 10px;
+    }
 
     .event-image {
         width: 128px;
