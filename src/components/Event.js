@@ -5,6 +5,8 @@ import '../styles/Event.css';
 const Event = ({ id, title, description, imageUrl, location, date }) => {
     const navigate = useNavigate();
 
+    console.log(location)
+
     const formatDate = (timestamp) => {
         if (!timestamp) return '';
         // Convert Firestore Timestamp to JavaScript Date object
@@ -35,7 +37,7 @@ const Event = ({ id, title, description, imageUrl, location, date }) => {
                     <span className="location-bold">
                         Location: 
                     </span> 
-                    {location}
+                    {location.label}
                 </p>
                 <p className="event-location">
                     <span className="location-bold">

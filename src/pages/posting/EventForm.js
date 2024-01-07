@@ -5,6 +5,8 @@ import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../../firebase";
 import { useNavigate } from 'react-router-dom';
 import axios from "axios";
+import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
+
 import '../../styles/posting/EventForm.css'
 
 const EventForm = () => {
@@ -12,10 +14,10 @@ const EventForm = () => {
         content: '',
         shortDescription: '',
         longDescription: '',
-        location: '',
         date: '',
         imageUrl: ''
     });
+    const [eventLocation, setEventLocation] = useState('Clacton-on-Sea')
     const [user, setUser] = useState(null);
     const [loggedInName, setLoggedInName] = useState('');
     const [ip, setIP] = useState("");
@@ -65,9 +67,10 @@ const EventForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log(eventLocation)
         try {
             const batch = writeBatch(db);
-
+            
             // Reference to the counter document
             const counterRef = doc(db, "counters", "eventCounter");
             const counterSnap = await getDoc(counterRef);
@@ -88,6 +91,7 @@ const EventForm = () => {
             const newEvent = {
                 id: newCount,
                 ...formData,
+                location: eventLocation,
                 date: eventDate,
                 createdOn: serverTimestamp(),
                 author: loggedInName,
@@ -135,13 +139,12 @@ const EventForm = () => {
                     placeholder="Long Description" 
                     required 
                 />
-                <input 
-                    type="text" 
-                    name="location" 
-                    value={formData.location} 
-                    onChange={handleChange} 
-                    placeholder="Location" 
-                    required 
+                <GooglePlacesAutocomplete
+                    apiKey={`${process.env.REACT_APP_GMAPS_STATIC_KEY}`}
+                    selectProps={{
+                        eventLocation,
+                        onChange: setEventLocation
+                    }}
                 />
                 <input 
                     type="datetime-local" 
@@ -159,7 +162,6 @@ const EventForm = () => {
                     placeholder="Image URL" 
                     required 
                 />
-
                 <button type="submit">Submit Event</button>
             </form>
         </div>

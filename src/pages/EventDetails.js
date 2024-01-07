@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -22,6 +22,7 @@ const EventDetails = () => {
                 const eventDocs = querySnapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
                 if (eventDocs.length > 0) {
                     setEvent(eventDocs[0]);
+                    console.log(event.location)
                 } else {
                     console.log('No such event!');
                 }
@@ -51,7 +52,7 @@ const EventDetails = () => {
 
     return (
         <div className="main-event-details-wrapper">
-            <a href="/events">🡠 Back to Events</a>
+            <a href="/events">◄ Back to Events</a>
             <div className="event-details-grid">
                 <div className="event-detail-container">
                     {event.imageUrl && (
@@ -60,7 +61,7 @@ const EventDetails = () => {
                     <div className="event-detail-info">
                         <h3 className="event-detail-title">{event.content}</h3>
                         <p className="event-detail-short-description">{event.shortDescription}</p>
-                        <p className="event-detail-meta"><span className="location-bold">Location:</span> {event.location}</p>
+                        <p className="event-detail-meta"><span className="location-bold">Location:</span>{event.location.label}</p>
                         <p className="event-detail-meta"><span className="date-bold">Date:</span> {formatDate(event.date)}</p>
                         <p className="event-detail-long-description">{event.longDescription}</p>
                     </div>
@@ -68,7 +69,7 @@ const EventDetails = () => {
                 <div className="right-side-wrapper">
                     <div>
                         <img className="google-maps-static"
-                        src={`https://maps.googleapis.com/maps/api/staticmap?center=24+Pier+Ave,Clacton-on-Sea,CO15+1QN&zoom=18&markers=24+Pier+Ave,Clacton-on-Sea,CO15+1QN&size=640x640&maptype=roadmap&key=${process.env.REACT_APP_GMAPS_STATIC_KEY}`} />
+                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${event.location.label}&zoom=18&markers=${event.location.label}&size=640x640&maptype=roadmap&key=${process.env.REACT_APP_GMAPS_STATIC_KEY}`} />
                     </div>
                     <div className="event-detail-interaction-menu">
                         {/* Interaction buttons go here */}
