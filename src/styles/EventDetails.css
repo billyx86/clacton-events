@@ -34,6 +34,14 @@
     gap: 10px; /* This adds space between each button */
 }
 
+.google-maps-static {
+    width: calc(20rem + 40px);
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: solid 1px;
+}
+
 .event-detail-header {
     text-align: center;
 }
@@ -107,6 +115,9 @@
         width: calc(100% - 40px);
     }
     
+    .google-maps-static {
+        width: 100%;
+    }
 
     .event-detail-interaction-menu {
         width: auto;

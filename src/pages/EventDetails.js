@@ -1,7 +1,10 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
+
 import '../styles/EventDetails.css'; // Make sure the path to your CSS file is correct
 
 const EventDetails = () => {
@@ -28,6 +31,7 @@ const EventDetails = () => {
             setLoading(false);
         };
         fetchEvent();
+
     }, [id]);
 
     if (loading) {
@@ -61,12 +65,18 @@ const EventDetails = () => {
                         <p className="event-detail-long-description">{event.longDescription}</p>
                     </div>
                 </div>
-                <div className="event-detail-interaction-menu">
-                    {/* Interaction buttons go here */}
-                    <button className="event-detail-button">I'm Interested</button>
-                    <button className="event-detail-button">Open Event Website</button>
-                    <button className="event-detail-button">Save for Later</button>
-                    <button className="event-detail-button">Share</button>
+                <div className="right-side-wrapper">
+                    <div>
+                        <img className="google-maps-static"
+                        src={`https://maps.googleapis.com/maps/api/staticmap?center=24+Pier+Ave,Clacton-on-Sea,CO15+1QN&zoom=18&markers=24+Pier+Ave,Clacton-on-Sea,CO15+1QN&size=640x640&maptype=roadmap&key=${process.env.REACT_APP_GMAPS_STATIC_KEY}`} />
+                    </div>
+                    <div className="event-detail-interaction-menu">
+                        {/* Interaction buttons go here */}
+                        <button className="event-detail-button">I'm Interested</button>
+                        <button className="event-detail-button">Open Event Website</button>
+                        <button className="event-detail-button">Save for Later</button>
+                        <button className="event-detail-button">Share</button>
+                    </div>
                 </div>
             </div>
         </div>
