@@ -1,0 +1,114 @@
+.main-event-details-wrapper {
+    max-width: 1920px;
+    display:grid;
+    grid-template-rows: auto 1fr;
+    margin: 0 auto;
+}
+
+.event-details-grid {
+    display: grid;
+    grid-auto-flow: column;
+    gap: 24px;
+    margin: 20px;
+    align-items: start;
+}
+
+.event-detail-container {
+    width: clamp(100px, 80vw, 400px);
+    padding: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: grid;
+    grid-gap: 20px;
+}
+
+.event-detail-interaction-menu {
+    width: 20rem;
+    padding: 20px;
+    background-color: #f4f4f4; /* This light grey background distinguishes the menu from the main content */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* This adds space between each button */
+}
+
+.event-detail-header {
+    text-align: center;
+}
+
+.event-detail-image {
+    width: 100%;
+    max-height: 500px;
+    height: auto;
+    border-radius: 8px;
+    object-fit: cover; /* This ensures the image covers the element's box */
+}
+
+.event-detail-info {
+    display: grid;
+    grid-gap: 10px;
+}
+
+.event-detail-title {
+    font-size: 24px;
+    max-width: 100%;
+    font-weight: bold;
+    color: #333333;
+    word-break:break-word;
+}
+
+.event-detail-short-description,
+.event-detail-long-description {
+    font-size: 16px;
+    color: #666666;
+    line-height: 1.6;
+}
+
+.event-detail-meta {
+    font-size: 14px;
+    color: #888888;
+}
+
+.event-detail-meta span {
+    font-weight: bold;
+}
+
+.event-detail-button {
+    padding: 10px 20px;
+    background-color: #0073e6;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    text-decoration: none; /* If using <a> tag */
+}
+
+.event-detail-button:hover {
+    background-color: #0056b3;
+}
+
+.main-event-details-wrapper a {
+    margin-top: 10px;
+    margin-left: 20px;
+    text-decoration: none;
+    color: #0073e6
+}
+
+@media screen and (max-width: 768px) {
+    .event-details-grid {
+        grid-auto-flow: row;
+    }
+
+    .event-detail-container {
+        width: calc(100% - 40px);
+    }
+    
+
+    .event-detail-interaction-menu {
+        width: auto;
+    }
+}

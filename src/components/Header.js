@@ -60,7 +60,7 @@ const Header = () => {
                     <span>☰</span>
                 </div>
                 <div className="logo">
-                    <p>Logo</p>
+                    <p><a href="/">Clacton Events</a></p>
                 </div>
                 <nav className={`nav ${isNavVisible ? 'show' : ''}`}>
                     <ul>
@@ -73,7 +73,7 @@ const Header = () => {
                     {user ? (
                         <div className="user-menu">
                             <button onClick={toggleDropdown} className="user-menu-button">
-                                {loggedInName ? `${loggedInName}` : 'User'}
+                                {loggedInName ? `${loggedInName.split(' ')[0]}` : 'User'}
                             </button>
                                 <div className={`dropdown ${showDropdown ? 'show' : ''}`}>
                                     <a href="/profile">Profile</a>
@@ -83,8 +83,8 @@ const Header = () => {
                         </div>
                     ) : (
                         <>
-                            <a href="/login">Login</a>
-                            <a href="/signup">Sign Up</a>
+                            <a className="login-signup-buttons" href="/login">Log in</a>
+                            <a className="login-signup-buttons" href="/signup">Sign Up</a>
                         </>
                     )}
                 </div>

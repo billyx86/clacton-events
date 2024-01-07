@@ -30,7 +30,8 @@ const Login = () => {
         {error && <div className="error-message">{error}</div>}
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" />
         <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" />
-        <button type="submit">Login</button>
+        <button type="submit">Log in</button>
+        <p>Don't have an account? <a href="/signup">Register here.</a></p>
     </form>
   </div>
   );

@@ -16,7 +16,7 @@ const Main = () => {
         <Route exact path='/events' element={<EventsPage/>} />
         <Route path="/login" element={ <Login /> } />
         <Route path="/signup" element={ <Signup /> } />
-        <Route path="/event/:id" component={EventDetails} />
+        <Route path="/events/:id" element={ <EventDetails /> } />
         <Route path="/list-event" element={ <ListEvent />} />
         <Route path="/profile" element={ <Profile />} />
     </Routes>

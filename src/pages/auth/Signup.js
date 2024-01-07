@@ -57,6 +57,7 @@ const Signup = () => {
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required />
             <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirm Password" required />
             <button type="submit">Sign Up</button>
+            <p>Already have an account? <a href="/login">Log in here.</a></p>
         </form>
     </div>
 );
