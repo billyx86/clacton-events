@@ -103,14 +103,3 @@ h2 {
 .radio-button-input:checked + label::before {
     background: #0073e6;
 }
-
-.radio-button-input:checked + label::after {
-    content: '';
-    position: absolute;
-    left: 5px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-}

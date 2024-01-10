@@ -63,8 +63,8 @@ const Signup = () => {
                     type="radio"
                     value="personal"
                     className="radio-button-input"
-                    checked={accountType === 'personal'}
-                    onChange={() => setAccountType('personal')}
+                    checked={accountType === "personal"}
+                    onChange={() => setAccountType("personal")}
                   />
                   <label htmlFor="personal-radio-button">Personal</label>
                 </div>
@@ -74,8 +74,8 @@ const Signup = () => {
                     type="radio"
                     value="business"
                     className="radio-button-input"
-                    checked={accountType === 'business'}
-                    onChange={() => setAccountType('business')}
+                    checked={accountType === "business"}
+                    onChange={() => setAccountType("business")}
                   />
                   <label htmlFor="business-radio-button">Business</label>
                 </div>
