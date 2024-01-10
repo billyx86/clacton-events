@@ -8,6 +8,7 @@ const Header = () => {
     const [isNavVisible, setIsNavVisible] = useState(false);
     const [user, setUser] = useState(null);
     const [loggedInName, setLoggedInName] = useState('');
+    const [isBusiness, setIsBusiness] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
 
     useEffect(() => {
@@ -25,7 +26,15 @@ const Header = () => {
             const userSnap = await getDoc(userRef);
     
             if (userSnap.exists()) {
-                setLoggedInName(userSnap.data().name);
+
+                if (userSnap.data().accountType == "business") {
+                    setIsBusiness(true)
+                    setLoggedInName(userSnap.data().name);
+                } else {
+                    setIsBusiness(false)
+                    setLoggedInName(userSnap.data().name.split(' ')[0])
+                }
+            
             } else {
                 console.log("No such document!");
             }
@@ -73,7 +82,7 @@ const Header = () => {
                     {user ? (
                         <div className="user-menu">
                             <button onClick={toggleDropdown} className="user-menu-button">
-                                {loggedInName ? `${loggedInName.split(' ')[0]}` : 'User'}
+                                {loggedInName ? `${loggedInName}` : 'User'}
                             </button>
                                 <div className={`dropdown ${showDropdown ? 'show' : ''}`}>
                                     <a href="/profile">Profile</a>

@@ -11,6 +11,7 @@ import '../../styles/auth/Signup.css';
 export const serverStamp = firebase.firestore.Timestamp
 
 const Signup = () => {
+  const [accountType, setAccountType] = useState('Personal');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -34,7 +35,8 @@ const Signup = () => {
                     name,
                     email,
                     photoURL,
-                    created_at: stampNow
+                    created_at: stampNow,
+                    accountType
                 })
                 navigate('/');
             } catch (e) {
@@ -52,6 +54,33 @@ const Signup = () => {
         <form className="signup-form" onSubmit={handleSignup}>
             <h2>Sign Up</h2>
             {error && <div className="error-message">{error}</div>}
+            <div className="account-type-selector">
+              <p>Account Type: </p>
+              <div className="account-type-selector-buttons">
+                <div className="radio-button-left">
+                  <input
+                    id="personal-radio-button"
+                    type="radio"
+                    value="personal"
+                    className="radio-button-input"
+                    checked={accountType === 'personal'}
+                    onChange={() => setAccountType('personal')}
+                  />
+                  <label htmlFor="personal-radio-button">Personal</label>
+                </div>
+                <div className="radio-button-right">
+                  <input
+                    id="business-radio-button"
+                    type="radio"
+                    value="business"
+                    className="radio-button-input"
+                    checked={accountType === 'business'}
+                    onChange={() => setAccountType('business')}
+                  />
+                  <label htmlFor="business-radio-button">Business</label>
+                </div>
+              </div>
+            </div>
             <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Name" required />
             <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" required />
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Password" required />

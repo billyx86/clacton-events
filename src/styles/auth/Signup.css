@@ -14,7 +14,7 @@
     width: 300px;
 }
 
-.signup-form input {
+.signup-form input:not(.radio-button-input) {
     width: 100%;
     padding: 10px;
     margin: 10px 0;
@@ -45,4 +45,70 @@ h2 {
     font-family: Arial, Helvetica, sans-serif;
     text-align: center;
     margin-bottom: 10px;
+}
+
+.account-type-selector {
+    display: flex;
+    flex-direction: column;
+    align-content: center;
+    margin-bottom: 10px;
+}
+
+.account-type-selector-buttons {
+    display: flex;
+    justify-content: space-between; /* Adjust alignment */
+    margin-top: 10px;
+    margin-left: 2.5em;
+    margin-right: 2.5em;
+}
+
+.radio-button-left,
+.radio-button-right {
+    display: flex;
+    align-items: center; /* Align label text with custom radio button */
+    margin-right: 20px; /* Space between radio buttons */
+    font-size: 14px; /* Adjust font size as needed */
+}
+
+.radio-button-input {
+    display: none;
+}
+
+.radio-button-left label,
+.radio-button-right label {
+    position: relative;
+    padding-left: 30px;
+    cursor: pointer;
+    user-select: none;
+    color: #666; /* Adjust text color as needed */
+}
+
+.radio-button-left label::before,
+.radio-button-right label::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: white;
+    border: 2px solid #0073e6; /* Border color */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.radio-button-input:checked + label::before {
+    background: #0073e6; /* Background color for checked state */
+}
+
+.radio-button-input:checked + label::after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
 }
