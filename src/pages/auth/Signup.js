@@ -1,10 +1,10 @@
-import firebase from "firebase/compat/app";
-import "firebase/compat/firestore";
+import firebase from 'firebase/compat/app';
+import 'firebase/compat/firestore';
 
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { collection, getDocs, doc, setDoc } from "firebase/firestore";
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import React, { useState } from 'react';
-import { auth, db } from "../../firebase";
+import { auth, db } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/auth/Signup.css';
 

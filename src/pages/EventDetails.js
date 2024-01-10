@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 
-import '../styles/EventDetails.css'; // Make sure the path to your CSS file is correct
+import '../styles/EventDetails.css';
 
 const EventDetails = () => {
     const { id } = useParams();
@@ -77,14 +77,14 @@ const EventDetails = () => {
                             href={`https://www.google.com/maps/search/?api=1&query=${event.location.label}`}
                             className="google-maps-clickable-wrapper-left"
                             target="_blank"
-                            >
+                        >
                                 Open in Google Maps
                         </a>
                         <a 
                             href={`https://www.google.com/maps/dir/?api=1&destination=${event.location.label}`}
                             className="google-maps-clickable-wrapper-right"
                             target="_blank"
-                            >
+                        >
                                 Get Directions
                         </a>
                     </div>

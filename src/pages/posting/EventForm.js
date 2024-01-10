@@ -1,11 +1,11 @@
 // EventForm.js
 import React, { useState, useEffect, useRef  } from 'react';
-import { collection, addDoc, serverTimestamp, doc, getDoc, writeBatch, Timestamp  } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth, db, storage } from "../../firebase";
+import { collection, addDoc, serverTimestamp, doc, getDoc, writeBatch, Timestamp  } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db, storage } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import axios from "axios";
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import axios from 'axios';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 
 import '../../styles/posting/EventForm.css'
@@ -18,7 +18,7 @@ const EventForm = () => {
         date: '',
         imageUrl: ''
     });
-    const [eventLocation, setEventLocation] = useState('Clacton-on-Sea')
+    const [eventLocation, setEventLocation] = useState('Clacton-on-Sea');
     const [user, setUser] = useState(null);
     const [loggedInName, setLoggedInName] = useState('');
     const [ip, setIP] = useState("");

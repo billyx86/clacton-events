@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
+import React, { useState, useEffect } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 import Event from '../components/Event';
 
 const Home = () => {
@@ -25,7 +25,7 @@ const Home = () => {
 
   const scrollEvents = (direction) => {
     const container = document.querySelector('.home-events-container');
-    const scrollAmount = 300; // Adjust as needed
+    const scrollAmount = 300;
     if (direction === 'left') {
         container.scrollLeft -= scrollAmount;
     } else {
@@ -45,9 +45,9 @@ const Home = () => {
                 <Event 
                   key={event.id} 
                   id={event.id} 
-                  title={event.content} // or event.title, depending on your data structure
-                  description={event.shortDescription} // or appropriate field
-                  imageUrl={event.imageUrl} // or appropriate field
+                  title={event.content}
+                  description={event.shortDescription}
+                  imageUrl={event.imageUrl}
                   location={event.location}
                   date={event.date}
                 />

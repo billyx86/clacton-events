@@ -1,9 +1,9 @@
 // EventsPage.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from 'react';
 import Event from '../components/Event';
-import { collection, getDocs } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "../firebase";
+import { collection, getDocs } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth, db } from '../firebase';
 import { useNavigate } from 'react-router-dom';
 
 const EventsPage = () => {
@@ -28,7 +28,7 @@ const EventsPage = () => {
           const eventsList = eventsSnapshot.docs
             .map(doc => ({ id: doc.id, ...doc.data() }))
             .filter(event => event.date && event.date.toDate() > now) // Filter out past events
-            .sort((a, b) => b.id - a.id); // Sort events (adjust sorting as needed)
+            .sort((a, b) => b.id - a.id);
 
           setEvents(eventsList);
       };
