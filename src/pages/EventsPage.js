@@ -24,10 +24,13 @@ const EventsPage = () => {
       const fetchEvents = async () => {
           const eventsCollectionRef = collection(db, "events");
           const eventsSnapshot = await getDocs(eventsCollectionRef);
-          const eventsList = eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-          const sortedEvents = eventsList.sort((a, b) => b.id - a.id);
-          
-          setEvents(sortedEvents);
+          const now = new Date();
+          const eventsList = eventsSnapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .filter(event => event.date && event.date.toDate() > now) // Filter out past events
+            .sort((a, b) => b.id - a.id); // Sort events (adjust sorting as needed)
+
+          setEvents(eventsList);
       };
 
       fetchEvents();

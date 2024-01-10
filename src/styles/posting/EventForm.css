@@ -47,3 +47,16 @@
     color: #888;
 }
 
+.image-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.image-input-wrapper input[type="text"] {
+    flex: 1;
+}
+
+.image-input-wrapper input[type="file"] {
+    width: 10px;
+}

@@ -1,9 +1,10 @@
 // EventForm.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef  } from 'react';
 import { collection, addDoc, serverTimestamp, doc, getDoc, writeBatch, Timestamp  } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { auth, db } from "../../firebase";
+import { auth, db, storage } from "../../firebase";
 import { useNavigate } from 'react-router-dom';
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import axios from "axios";
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 
@@ -22,12 +23,31 @@ const EventForm = () => {
     const [loggedInName, setLoggedInName] = useState('');
     const [ip, setIP] = useState("");
     const navigate  = useNavigate();
+    const fileInputRef = useRef(null);
+
+    const handleButtonClick = () => {
+        fileInputRef.current.click();
+    };
 
     const getData = async () => {
         const res = await axios.get("https://api.ipify.org/?format=json");
         console.log(res.data);
         setIP(res.data.ip);
       };
+
+    const getFormattedCurrentDateTime = () => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0'); // month is 0-indexed
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+    
+
+    const [minDateTime, setMinDateTime] = useState(getFormattedCurrentDateTime());
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -64,6 +84,21 @@ const EventForm = () => {
         const dateObj = new Date(dateString);
         return Timestamp.fromDate(dateObj);
     };
+
+    const handleImageUpload = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const userId = auth.currentUser.uid;
+        const timestamp = new Date().getTime();
+        const uniquePath = `events/${userId}/${timestamp}-${file.name}`;
+    
+        const fileRef = ref(storage, `${uniquePath}`);
+        await uploadBytes(fileRef, file);
+        const imageUrl = await getDownloadURL(fileRef);
+        setFormData({ ...formData, imageUrl });
+    };
+    
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -143,7 +178,8 @@ const EventForm = () => {
                     apiKey={`${process.env.REACT_APP_GMAPS_STATIC_KEY}`}
                     selectProps={{
                         eventLocation,
-                        onChange: setEventLocation
+                        onChange: setEventLocation,
+                        placeholder: "Location"
                     }}
                 />
                 <input 
@@ -152,16 +188,29 @@ const EventForm = () => {
                     value={formData.date}
                     onChange={handleChange}
                     placeholder="Date (DD/MM/YY HH:MM)" 
+                    min={minDateTime}
                     required 
                 />
                 <input 
-                    type="text" 
-                    name="imageUrl" 
-                    value={formData.imageUrl} 
-                    onChange={handleChange} 
-                    placeholder="Image URL" 
-                    required 
+                    type="file" 
+                    ref={fileInputRef}
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                    style={{ display: 'none' }} 
                 />
+                <div className="image-input-wrapper">
+                    <input 
+                        type="text" 
+                        name="imageUrl" 
+                        value={formData.imageUrl} 
+                        onChange={handleChange} 
+                        placeholder="Image URL"
+                        required
+                    />
+                    <button type="button" onClick={handleButtonClick} className="custom-upload-button">
+                        Upload Image
+                    </button>
+                </div>
                 <button type="submit">Submit Event</button>
             </form>
         </div>

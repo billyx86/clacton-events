@@ -52,7 +52,7 @@ const EventDetails = () => {
 
     return (
         <div className="main-event-details-wrapper">
-            <a href="/events">◄ Back to Events</a>
+            <a className="main-event-details-bte-button" href="/events">◄ Back to Events</a>
             <div className="event-details-grid">
                 <div className="event-detail-container">
                     {event.imageUrl && (
@@ -69,7 +69,24 @@ const EventDetails = () => {
                 <div className="right-side-wrapper">
                     <div>
                         <img className="google-maps-static"
-                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${event.location.label}&zoom=18&markers=${event.location.label}&size=640x640&maptype=roadmap&key=${process.env.REACT_APP_GMAPS_STATIC_KEY}`} />
+                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${event.location.label}&zoom=18&markers=${event.location.label}&size=640x640&maptype=roadmap&key=${process.env.REACT_APP_GMAPS_STATIC_KEY}`}
+                        />
+                    </div>
+                    <div className="maps-buttons">
+                        <a 
+                            href={`https://www.google.com/maps/search/?api=1&query=${event.location.label}`}
+                            className="google-maps-clickable-wrapper-left"
+                            target="_blank"
+                            >
+                                Open in Google Maps
+                        </a>
+                        <a 
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${event.location.label}`}
+                            className="google-maps-clickable-wrapper-right"
+                            target="_blank"
+                            >
+                                Get Directions
+                        </a>
                     </div>
                     <div className="event-detail-interaction-menu">
                         {/* Interaction buttons go here */}
