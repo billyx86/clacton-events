@@ -11,7 +11,9 @@ const Home = () => {
       const eventsCollectionRef = collection(db, "events");
       const eventsSnapshot = await getDocs(eventsCollectionRef);
       const now = new Date();
-      const allEvents = eventsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(event => event.date && event.date.toDate() > now);
+      const allEvents = eventsSnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(event => event.date && event.date.toDate() > now);
 
       // Shuffle and pick three events
       const shuffledEvents = allEvents.sort(() => 0.5 - Math.random());

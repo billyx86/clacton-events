@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { db } from '../firebase';
+import { collection, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 
 import '../styles/EventDetails.css';
 
@@ -11,6 +11,7 @@ const EventDetails = () => {
     const { id } = useParams();
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [interestFeedback, setInterestFeedback] = useState('');
 
     useEffect(() => {
         const fetchEvent = async () => {
@@ -48,6 +49,42 @@ const EventDetails = () => {
         const dateObj = timestamp.toDate();
         const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
         return dateObj.toLocaleDateString('en-GB', options);
+    };
+
+    const handleInterest = async () => {
+        if (!auth.currentUser) {
+            console.error("No user logged in");
+            setInterestFeedback("You must be logged in to show interest.");
+            return;
+        }
+
+        const userEmail = auth.currentUser.email;
+        const userRef = doc(db, "users", userEmail);
+        
+        try {
+            const userDoc = await getDoc(userRef);
+            if (userDoc.exists()) {
+                const userData = userDoc.data();
+
+                // Check if the user has already shown interest in this event
+                if (userData.interestedEvents && userData.interestedEvents.includes(id)) {
+                    setInterestFeedback("You have already shown interest in this event.");
+                    return;
+                }
+
+                // Update the user's interested events
+                await updateDoc(userRef, {
+                    interestedEvents: arrayUnion(id)
+                });
+                setInterestFeedback("You have successfully shown interest in this event.");
+            } else {
+                console.error("User document does not exist");
+                setInterestFeedback("Error: User document does not exist.");
+            }
+        } catch (error) {
+            console.error("Error updating user's interested events:", error);
+            setInterestFeedback("Error updating interested events.");
+        }
     };
 
     return (
@@ -89,8 +126,9 @@ const EventDetails = () => {
                         </a>
                     </div>
                     <div className="event-detail-interaction-menu">
-                        {/* Interaction buttons go here */}
-                        <button className="event-detail-button">I'm Interested</button>
+                        {/* Interaction buttons */}
+                        <button className="event-detail-button" onClick={handleInterest}>I'm Interested</button>
+                        {interestFeedback && <p className="interest-feedback">{interestFeedback}</p>}
                         <button className="event-detail-button">Open Event Website</button>
                         <button className="event-detail-button">Save for Later</button>
                         <button className="event-detail-button">Share</button>

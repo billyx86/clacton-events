@@ -27,7 +27,7 @@ const Header = () => {
     
             if (userSnap.exists()) {
 
-                if (userSnap.data().accountType == "business") {
+                if (userSnap.data().accountType === "business") {
                     setIsBusiness(true)
                     setLoggedInName(userSnap.data().name);
                 } else {
@@ -87,7 +87,7 @@ const Header = () => {
                                 <div className={`dropdown ${showDropdown ? 'show' : ''}`}>
                                     <a href="/profile">Profile</a>
                                     <a href="/account-settings">Account Settings</a>
-                                    <a onClick={handleSignOut}>Log Out</a>
+                                    <a onClick={handleSignOut} href="javascript:void(0);">Log Out</a>
                                 </div>
                         </div>
                     ) : (
