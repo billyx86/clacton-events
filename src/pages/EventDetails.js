@@ -129,7 +129,7 @@ const EventDetails = () => {
                         {/* Interaction buttons */}
                         <button className="event-detail-button" onClick={handleInterest}>I'm Interested</button>
                         {interestFeedback && <p className="interest-feedback">{interestFeedback}</p>}
-                        <button className="event-detail-button">Open Event Website</button>
+                        {event.websiteUrl && <a className="button-url-wrapper" href={`${event.websiteUrl}`}><button className="event-detail-button">Open Event Website</button></a>}
                         <button className="event-detail-button">Save for Later</button>
                         <button className="event-detail-button">Share</button>
                     </div>

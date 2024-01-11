@@ -16,7 +16,8 @@ const EventForm = () => {
         shortDescription: '',
         longDescription: '',
         date: '',
-        imageUrl: ''
+        imageUrl: '',
+        websiteUrl: ''
     });
     const [eventLocation, setEventLocation] = useState('Clacton-on-Sea');
     const [user, setUser] = useState(null);
@@ -140,7 +141,7 @@ const EventForm = () => {
             // Commit the batch
             await batch.commit();
             console.log("Event successfully listed!");
-            setFormData({ content: '', shortDescription: '', longDescription: '', location: '', imageUrl: '' }); // Reset form
+            setFormData({ content: '', shortDescription: '', longDescription: '', location: '', imageUrl: '', websiteUrl: '' }); // Reset form
             navigate('/events');
         } catch (error) {
             console.error("Error listing event: ", error);
@@ -173,6 +174,13 @@ const EventForm = () => {
                     onChange={handleChange} 
                     placeholder="Long Description" 
                     required 
+                />
+                <input 
+                    type="text" 
+                    name="websiteUrl" 
+                    value={formData.websiteUrl} 
+                    onChange={handleChange} 
+                    placeholder="Website URL (optional)"  
                 />
                 <GooglePlacesAutocomplete
                     apiKey={`${process.env.REACT_APP_GMAPS_STATIC_KEY}`}

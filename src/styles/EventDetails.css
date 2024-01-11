@@ -159,3 +159,11 @@
     margin-top: 0px;
     margin-bottom: 10px;
 }
+
+.button-url-wrapper {
+    width:100%;
+}
+
+.button-url-wrapper button {
+    width:100%;
+}
