@@ -1,0 +1,47 @@
+.profile-info-container {
+    width: clamp(200px, 100vw, 1920px);
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.user-info-card {
+    width: clamp(100px, 80vw, 800px);
+    margin: 0 auto;
+    padding: 20px;
+    margin: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    display: grid;
+    grid-template-rows: repeat(3, 1fr);
+    justify-content: center;
+    text-align: center;
+}
+
+.user-info-name {
+    display: flex;
+    justify-content: center;
+    align-items: end;
+    gap: 5px;
+}
+
+.user-info-name p {
+    font-size: clamp(1em, 2em, 36px);
+}
+
+.user-info-name button {
+    width: 2em;
+    height: 1.5em;
+    background-color: white;
+    border: none;
+}
+
+.events-map {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: clamp(150px, 80vw, 500px);
+    margin-bottom: 20px;
+}
