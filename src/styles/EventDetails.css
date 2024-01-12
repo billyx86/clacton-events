@@ -107,7 +107,7 @@
     margin-top: 10px;
     margin-left: 20px;
     text-decoration: none;
-    color: #0073e6
+    color: #0073e6;
 }
 
 .event-form-container h1 {
@@ -161,9 +161,19 @@
 }
 
 .button-url-wrapper {
-    width:100%;
+    width: 100%;
 }
 
 .button-url-wrapper button {
-    width:100%;
+    width: 100%;
+}
+
+.share-buttons {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+}
+
+.share-button-svg {
+    fill: #0073e6;
 }

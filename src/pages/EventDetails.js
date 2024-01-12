@@ -5,6 +5,8 @@ import { useParams } from 'react-router-dom';
 import { collection, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 
+import { EmailShareButton, FacebookShareButton, TwitterShareButton } from "react-share"
+
 import '../styles/EventDetails.css';
 
 const EventDetails = () => {
@@ -130,8 +132,20 @@ const EventDetails = () => {
                         <button className="event-detail-button" onClick={handleInterest}>I'm Interested</button>
                         {interestFeedback && <p className="interest-feedback">{interestFeedback}</p>}
                         {event.websiteUrl && <a className="button-url-wrapper" href={`${event.websiteUrl}`}><button className="event-detail-button">Open Event Website</button></a>}
+                        {/* Not implemented while I figure out a use for this.
                         <button className="event-detail-button">Save for Later</button>
-                        <button className="event-detail-button">Share</button>
+                    <button className="event-detail-button">Share</button> */}
+                        <div className="share-buttons">
+                            <EmailShareButton url={window.location.href}> 
+                                <svg className="share-button-svg" width="24" height="24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M19 24h-14c-2.761 0-5-2.239-5-5v-14c0-2.761 2.239-5 5-5h14c2.762 0 5 2.239 5 5v14c0 2.761-2.238 5-5 5zm-.141-6.333c.63 0 1.141-.512 1.141-1.142v-9.05c0-.63-.511-1.142-1.141-1.142h-13.718c-.63 0-1.141.512-1.141 1.142v9.05c0 .63.511 1.142 1.141 1.142h13.718zm-6.859-4.058l-6.228-4.321-.014 7.712h12.457v-7.712l-6.215 4.321zm5.913-6.609c-1.745 1.215-5.913 4.153-5.913 4.153l-5.947-4.153h11.86z"/></svg>
+                            </EmailShareButton>
+                            <FacebookShareButton url={window.location.href}>
+                                <svg className="share-button-svg" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-3 7h-1.924c-.615 0-1.076.252-1.076.889v1.111h3l-.238 3h-2.762v8h-3v-8h-2v-3h2v-1.923c0-2.022 1.064-3.077 3.461-3.077h2.539v3z"/></svg>
+                            </FacebookShareButton>
+                            <TwitterShareButton url={window.location.href}>
+                                <svg className="share-button-svg" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-.139 9.237c.209 4.617-3.234 9.765-9.33 9.765-1.854 0-3.579-.543-5.032-1.475 1.742.205 3.48-.278 4.86-1.359-1.437-.027-2.649-.976-3.066-2.28.515.098 1.021.069 1.482-.056-1.579-.317-2.668-1.739-2.633-3.26.442.246.949.394 1.486.411-1.461-.977-1.875-2.907-1.016-4.383 1.619 1.986 4.038 3.293 6.766 3.43-.479-2.053 1.08-4.03 3.199-4.03.943 0 1.797.398 2.395 1.037.748-.147 1.451-.42 2.086-.796-.246.767-.766 1.41-1.443 1.816.664-.08 1.297-.256 1.885-.517-.439.656-.996 1.234-1.639 1.697z"/></svg>
+                            </TwitterShareButton>
+                        </div>
                     </div>
                 </div>
             </div>
