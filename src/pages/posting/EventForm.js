@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import axios from 'axios';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
+import Pica from 'pica';
 
 import '../../styles/posting/EventForm.css'
 
@@ -25,6 +26,7 @@ const EventForm = () => {
     const [ip, setIP] = useState("");
     const navigate  = useNavigate();
     const fileInputRef = useRef(null);
+    const pica = Pica();
 
     const handleButtonClick = () => {
         fileInputRef.current.click();
@@ -89,16 +91,53 @@ const EventForm = () => {
     const handleImageUpload = async (event) => {
         const file = event.target.files[0];
         if (!file) return;
-
-        const userId = auth.currentUser.uid;
-        const timestamp = new Date().getTime();
-        const uniquePath = `events/${userId}/${timestamp}-${file.name}`;
-    
-        const fileRef = ref(storage, `${uniquePath}`);
-        await uploadBytes(fileRef, file);
-        const imageUrl = await getDownloadURL(fileRef);
-        setFormData({ ...formData, imageUrl });
-    };
+      
+        // Create a canvas and context for resizing
+        const offScreenCanvas = document.createElement('canvas');
+        const ctx = offScreenCanvas.getContext('2d');
+      
+        // Set the desired output dimensions
+        const maxWidth = 800;
+        const maxHeight = 600;
+      
+        // Read the uploaded file as a data URL
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            // Calculate the scaling factor to maintain aspect ratio
+            let scaleFactor = Math.min(maxWidth / img.width, maxHeight / img.height);
+            scaleFactor = (scaleFactor > 1) ? 1 : scaleFactor; // Don't scale up
+      
+            // Set canvas dimensions proportional to the image scaled to the max sizes
+            offScreenCanvas.width = img.width * scaleFactor;
+            offScreenCanvas.height = img.height * scaleFactor;
+      
+            // Resize the image with Pica
+            Pica().resize(img, offScreenCanvas)
+              .then(resizedCanvas => Pica().toBlob(resizedCanvas, 'image/jpeg', 0.90)) // Adjust the quality as needed
+              .then(blob => {
+                // Now you have a resized image as a Blob, ready to upload
+                const userId = auth.currentUser.uid;
+                const timestamp = new Date().getTime();
+                const uniquePath = `events/${userId}/${timestamp}-${file.name}`;
+      
+                const storageRef = ref(storage, uniquePath);
+                return uploadBytes(storageRef, blob);
+              })
+              .then(snapshot => getDownloadURL(snapshot.ref))
+              .then(imageUrl => {
+                setFormData({ ...formData, imageUrl });
+                // Handle the rest of your form submission here
+              })
+              .catch(error => {
+                console.error('Error uploading resized image: ', error);
+              });
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      };
     
 
     const handleSubmit = async (e) => {

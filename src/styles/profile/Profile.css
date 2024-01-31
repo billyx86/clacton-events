@@ -7,7 +7,7 @@
 }
 
 .user-info-card {
-    width: clamp(100px, 80vw, 800px);
+    width: clamp(100px, 80vw, 600px);
     margin: 0 auto;
     padding: 20px;
     margin: 20px;
@@ -23,7 +23,7 @@
 .user-info-name {
     display: flex;
     justify-content: center;
-    align-items: end;
+    align-content: center;
     gap: 5px;
 }
 
@@ -42,6 +42,6 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
-    width: clamp(150px, 80vw, 500px);
-    margin-bottom: 20px;
+    width: clamp(150px, 80vw, 600px);
+    text-align: start;
 }

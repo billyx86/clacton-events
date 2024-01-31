@@ -86,7 +86,7 @@ const Header = () => {
                             </button>
                                 <div className={`dropdown ${showDropdown ? 'show' : ''}`}>
                                     <a href="/profile">Profile</a>
-                                    <a href="/account-settings">Account Settings</a>
+                                    {/*<a href="/account-settings">Account Settings</a>*/}
                                     <a onClick={handleSignOut} href="javascript:void(0);">Log Out</a>
                                 </div>
                         </div>
