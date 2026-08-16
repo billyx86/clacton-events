@@ -26,13 +26,16 @@ const Header = () => {
             const userSnap = await getDoc(userRef);
     
             if (userSnap.exists()) {
-
-                if (userSnap.data().accountType === "business") {
+                const { name = '', accountType } = userSnap.data();
+                // Business accounts show the full name; personal accounts
+                // show the first word (null-safe — missing name renders as
+                // empty, the button falls back to 'User').
+                if (accountType === "business") {
                     setIsBusiness(true)
-                    setLoggedInName(userSnap.data().name);
+                    setLoggedInName(name);
                 } else {
                     setIsBusiness(false)
-                    setLoggedInName(userSnap.data().name.split(' ')[0])
+                    setLoggedInName(name.split(' ')[0]);
                 }
             
             } else {
