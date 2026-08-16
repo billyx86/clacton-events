@@ -1,17 +1,13 @@
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/firestore';
-
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, Timestamp } from 'firebase/firestore';
 import React, { useState } from 'react';
 import { auth, db } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
 import '../../styles/auth/Signup.css';
 
-export const serverStamp = firebase.firestore.Timestamp
-
 const Signup = () => {
-  const [accountType, setAccountType] = useState('Personal');
+  // One casing (lowercase) across the app — Header compares to "business".
+  const [accountType, setAccountType] = useState('personal');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,25 +22,31 @@ const Signup = () => {
         setError("Passwords do not match.");
         return;
     }
+    setError('');
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      var stampNow = serverStamp.now()
-            // Update the user profile with the username
+      await createUserWithEmailAndPassword(auth, email, password);
+            // Update the user profile with the username. A failure here must
+            // be surfaced — otherwise the user exists in Auth but has no
+            // Firestore doc and sees "No user profile data" everywhere.
             try {
                 await setDoc(doc(db, "users", email), {
                     name,
                     email,
                     photoURL,
-                    created_at: stampNow,
-                    accountType
-                })
+                    created_at: Timestamp.now(),
+                    accountType,
+                    interestedEvents: []
+                });
                 navigate('/');
             } catch (e) {
-                console.log(e)
+                console.error('Failed to create user profile document:', e);
+                setError("Your account was created but saving your profile failed. Please log in again.");
             }
       // Redirect to home page or dashboard after login
     } catch (error) {
-      setError(`Authentication Error: ${error}`);
+      // Firebase throws an Error object — surface the real message, not
+      // "[object Object]".
+      setError(error.message || "Authentication failed. Please try again.");
       // Handle errors like incorrect password, user not found, etc.
     }
   };

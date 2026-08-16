@@ -5,6 +5,7 @@ import { collection, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { useNavigate } from 'react-router-dom';
+import { toEvent, isEventUpcoming, filterEventsByQuery, sortEventsByRecency } from '../utils/eventUtils';
 
 const EventsPage = () => {
     const [events, setEvents] = useState([]);
@@ -14,21 +15,20 @@ const EventsPage = () => {
 
     useEffect(() => {
       const unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-            setUser(user);
-        } else {
-            setUser(null);
-        }
+        setUser(user || null);
       });
 
       const fetchEvents = async () => {
           const eventsCollectionRef = collection(db, "events");
           const eventsSnapshot = await getDocs(eventsCollectionRef);
           const now = new Date();
-          const eventsList = eventsSnapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
-            .filter(event => event.date && event.date.toDate() > now) // Filter out past events
-            .sort((a, b) => b.id - a.id);
+          // toEvent() makes the document ID the canonical id; the list is
+          // sorted newest-first (createdOn, then legacy counter).
+          const eventsList = sortEventsByRecency(
+            eventsSnapshot.docs
+              .map(toEvent)
+              .filter(event => isEventUpcoming(event.date, now)) // Filter out past events
+          );
 
           setEvents(eventsList);
       };
@@ -42,7 +42,7 @@ const EventsPage = () => {
         setSearchQuery(event.target.value);
     }
 
-    const filteredEvents = events.filter(event => event.content.toLowerCase().includes(searchQuery.toLowerCase()));
+    const filteredEvents = filterEventsByQuery(events, searchQuery);
 
     return (
         <main>

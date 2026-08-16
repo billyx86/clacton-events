@@ -1,11 +1,10 @@
 // EventForm.js
 import React, { useState, useEffect, useRef  } from 'react';
-import { collection, addDoc, serverTimestamp, doc, getDoc, writeBatch, Timestamp  } from 'firebase/firestore';
+import { collection, serverTimestamp, doc, getDoc, runTransaction, Timestamp  } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db, storage } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import axios from 'axios';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import Pica from 'pica';
 
@@ -23,20 +22,14 @@ const EventForm = () => {
     const [eventLocation, setEventLocation] = useState('Clacton-on-Sea');
     const [user, setUser] = useState(null);
     const [loggedInName, setLoggedInName] = useState('');
-    const [ip, setIP] = useState("");
+    const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
     const navigate  = useNavigate();
     const fileInputRef = useRef(null);
-    const pica = Pica();
 
     const handleButtonClick = () => {
         fileInputRef.current.click();
     };
-
-    const getData = async () => {
-        const res = await axios.get("https://api.ipify.org/?format=json");
-        console.log(res.data);
-        setIP(res.data.ip);
-      };
 
     const getFormattedCurrentDateTime = () => {
       const now = new Date();
@@ -50,7 +43,7 @@ const EventForm = () => {
     };
     
 
-    const [minDateTime, setMinDateTime] = useState(getFormattedCurrentDateTime());
+    const [minDateTime] = useState(getFormattedCurrentDateTime());
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -74,10 +67,8 @@ const EventForm = () => {
             }
         }
 
-        getData();
-
         return unsubscribe; // Cleanup subscription on unmount
-    }, []);
+    }, [navigate]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -92,9 +83,8 @@ const EventForm = () => {
         const file = event.target.files[0];
         if (!file) return;
       
-        // Create a canvas and context for resizing
+        // Create a canvas for resizing
         const offScreenCanvas = document.createElement('canvas');
-        const ctx = offScreenCanvas.getContext('2d');
       
         // Set the desired output dimensions
         const maxWidth = 800;
@@ -142,48 +132,54 @@ const EventForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(eventLocation)
+        setSubmitError('');
+        if (submitting) return;
+        setSubmitting(true);
+
         try {
-            const batch = writeBatch(db);
-            
-            // Reference to the counter document
-            const counterRef = doc(db, "counters", "eventCounter");
-            const counterSnap = await getDoc(counterRef);
-            let newCount = 1;
-
-            if (counterSnap.exists()) {
-                newCount = counterSnap.data().count + 1;
-                batch.update(counterRef, { count: newCount });
-            } else {
-                // Initialize the counter if it doesn't exist
-                batch.set(counterRef, { count: newCount });
-            }
-
             // Convert date string to Firestore timestamp
             const eventDate = convertDateStringToTimestamp(formData.date);
 
-            // Create the new event with the incremented count
+            // Increment the legacy counter atomically — the old read-then-write
+            // allowed two concurrent posters to get the same id. The document
+            // ID (assigned by Firestore) remains the canonical event ID; the
+            // counter is kept only as a sort key for older listings.
+            const counterRef = doc(db, "counters", "eventCounter");
             const newEvent = {
-                id: newCount,
                 ...formData,
                 location: eventLocation,
                 date: eventDate,
                 createdOn: serverTimestamp(),
                 author: loggedInName,
-                emailOfAuthor: user.email,
-                ipOfAuthor: ip
+                emailOfAuthor: user.email
             };
-            
-            const newEventRef = doc(collection(db, "events"));
-            batch.set(newEventRef, newEvent);
 
-            // Commit the batch
-            await batch.commit();
+            const newEventRef = doc(collection(db, "events"));
+
+            await runTransaction(db, async (transaction) => {
+                const counterSnap = await transaction.get(counterRef);
+                const newCount = counterSnap.exists()
+                    ? counterSnap.data().count + 1
+                    : 1;
+                // Counter doc may not exist on the very first event —
+                // create it in-transaction rather than failing with
+                // update() on a missing document.
+                if (counterSnap.exists()) {
+                    transaction.update(counterRef, { count: newCount });
+                } else {
+                    transaction.set(counterRef, { count: newCount });
+                }
+                transaction.set(newEventRef, { ...newEvent, id: newCount });
+            });
+
             console.log("Event successfully listed!");
             setFormData({ content: '', shortDescription: '', longDescription: '', location: '', imageUrl: '', websiteUrl: '' }); // Reset form
             navigate('/events');
         } catch (error) {
             console.error("Error listing event: ", error);
+            setSubmitError("Something went wrong while listing the event. Please try again.");
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -258,7 +254,12 @@ const EventForm = () => {
                         Upload Image
                     </button>
                 </div>
-                <button type="submit">Submit Event</button>
+                <button type="submit" disabled={submitting}>
+                    {submitting ? 'Submitting…' : 'Submit Event'}
+                </button>
+                {submitError && (
+                    <p role="alert" style={{ color: '#c62828' }}>{submitError}</p>
+                )}
             </form>
         </div>
     );

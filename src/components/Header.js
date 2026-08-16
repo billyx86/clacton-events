@@ -8,7 +8,6 @@ const Header = () => {
     const [isNavVisible, setIsNavVisible] = useState(false);
     const [user, setUser] = useState(null);
     const [loggedInName, setLoggedInName] = useState('');
-    const [isBusiness, setIsBusiness] = useState(false);
     const [showDropdown, setShowDropdown] = useState(false);
 
     useEffect(() => {
@@ -26,14 +25,15 @@ const Header = () => {
             const userSnap = await getDoc(userRef);
     
             if (userSnap.exists()) {
-
-                if (userSnap.data().accountType === "business") {
-                    setIsBusiness(true)
-                    setLoggedInName(userSnap.data().name);
-                } else {
-                    setIsBusiness(false)
-                    setLoggedInName(userSnap.data().name.split(' ')[0])
-                }
+                const { name = '', accountType } = userSnap.data();
+                // Business accounts show the full name; personal accounts
+                // show the first word (null-safe — missing name renders as
+                // empty, the button falls back to 'User').
+                setLoggedInName(
+                    accountType === "business"
+                        ? name
+                        : name.split(' ')[0]
+                );
             
             } else {
                 console.log("No such document!");
@@ -87,7 +87,7 @@ const Header = () => {
                                 <div className={`dropdown ${showDropdown ? 'show' : ''}`}>
                                     <a href="/profile">Profile</a>
                                     {/*<a href="/account-settings">Account Settings</a>*/}
-                                    <a onClick={handleSignOut} href="javascript:void(0);">Log Out</a>
+                                    <button type="button" onClick={handleSignOut}>Log Out</button>
                                 </div>
                         </div>
                     ) : (

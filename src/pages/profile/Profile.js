@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { doc, getDoc, getDocs, collection } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../firebase';
 import Event from '../../components/Event';
+import { toEvent, isEventUpcoming, sortEventsByRecency } from '../../utils/eventUtils';
 import '../../styles/profile/Profile.css'
 
 const Profile = () => {
@@ -10,20 +11,30 @@ const Profile = () => {
     const [userProfile, setUserProfile] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                getUserInfo();
-            } else {
-                setLoading(false);
-            }
+    const fetchEvents = useCallback(async (interestedEvents) => {
+        const eventsCollectionRef = collection(db, "events");
+        const eventsSnapshot = await getDocs(eventsCollectionRef);
+        const now = new Date(); // Current date and time
+    
+        // toEvent() makes the document ID win over the legacy numeric `id`
+        // counter field, which matches what interestedEvents stores.
+        const allEvents = sortEventsByRecency(
+            eventsSnapshot.docs.map(toEvent)
+        );
+    
+        const eventsList = allEvents.filter(event => {
+            // Upcoming events only — and the document ID is present in
+            // the user's interestedEvents list (null-safe, no crash on
+            // missing dates).
+            return isEventUpcoming(event.date, now)
+                && Array.isArray(interestedEvents)
+                && interestedEvents.includes(event.id);
         });
-
-        // Cleanup subscription
-        return () => unsubscribe();
+    
+        setEvents(eventsList);
     }, []);
 
-    const getUserInfo = async () => {
+    const getUserInfo = useCallback(async () => {
         setLoading(true);
         const userEmail = auth.currentUser?.email;
         if (userEmail) {
@@ -44,26 +55,20 @@ const Profile = () => {
             console.log("No user logged in");
         }
         setLoading(false);
-    };
+    }, [fetchEvents]);
 
-    const fetchEvents = async (interestedEvents) => {
-        const eventsCollectionRef = collection(db, "events");
-        const eventsSnapshot = await getDocs(eventsCollectionRef);
-        const now = new Date(); // Current date and time
-    
-        const eventsList = eventsSnapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
-            .filter(event => {
-                // Convert Firestore Timestamp to JavaScript Date object
-                const eventDate = event.date.toDate();
-    
-                // Check if the event date is in the future and if it's in the interestedEvents array
-                return eventDate > now && interestedEvents?.includes(event.id.toString());
-            })
-            .sort((a, b) => b.id - a.id);
-    
-        setEvents(eventsList);
-    };
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                getUserInfo();
+            } else {
+                setLoading(false);
+            }
+        });
+
+        // Cleanup subscription
+        return () => unsubscribe();
+    }, [getUserInfo]);
 
     if (loading) {
         return <div>Loading...</div>;
