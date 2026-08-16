@@ -8,13 +8,20 @@
  */
 
 /**
- * Map a Firestore QueryDocumentSnapshot to a plain event object, making sure
- * the document ID (not the numeric counter field) wins any `id` collision.
+ * Map a Firestore QueryDocumentSnapshot to a plain event object. The document
+ * ID is the canonical `id`; the legacy numeric counter is preserved as
+ * `legacyId` so old listings can still be sorted by it.
  */
-export const toEvent = (snapshot) => ({
-  ...snapshot.data(),
-  id: snapshot.id,
-});
+export const toEvent = (snapshot) => {
+  const data = snapshot.data();
+  return {
+    ...data,
+    legacyId: data.id != null ? data.id : null,
+    // Document ID is canonical; fall back to the counter for legacy docs
+    // that somehow lost their document ID.
+    id: snapshot.id || (data.id != null ? data.id : ''),
+  };
+};
 
 /**
  * Get a displayable label for an event location.
@@ -35,7 +42,15 @@ export const getLocationLabel = (location) => {
  */
 export const isEventUpcoming = (eventDate, now = new Date()) => {
   if (!eventDate) return false;
-  const date = typeof eventDate.toDate === 'function' ? eventDate.toDate() : new Date(eventDate);
+  let date;
+  if (typeof eventDate.toDate === 'function') {
+    date = eventDate.toDate();
+  } else if (typeof eventDate.seconds === 'number') {
+    // Plain Firestore-style { seconds } object.
+    date = new Date(eventDate.seconds * 1000);
+  } else {
+    date = new Date(eventDate);
+  }
   if (Number.isNaN(date.getTime())) return false;
   return date > now;
 };
@@ -68,7 +83,7 @@ export const sortEventsByRecency = (events) => {
     if (event.createdOn && typeof event.createdOn.seconds === 'number') {
       return { v: 2, t: event.createdOn.seconds * 1000 };
     }
-    const counter = Number(event.id);
+    const counter = Number(event.legacyId != null ? event.legacyId : event.id);
     if (Number.isFinite(counter) && counter > 0) {
       return { v: 1, t: counter };
     }
