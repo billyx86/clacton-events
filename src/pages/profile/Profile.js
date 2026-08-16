@@ -3,6 +3,7 @@ import { doc, getDoc, getDocs, collection } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../firebase';
 import Event from '../../components/Event';
+import { toEvent, isEventUpcoming, sortEventsByRecency } from '../../utils/eventUtils';
 import '../../styles/profile/Profile.css'
 
 const Profile = () => {
@@ -51,16 +52,20 @@ const Profile = () => {
         const eventsSnapshot = await getDocs(eventsCollectionRef);
         const now = new Date(); // Current date and time
     
-        const eventsList = eventsSnapshot.docs
-            .map(doc => ({ id: doc.id, ...doc.data() }))
-            .filter(event => {
-                // Convert Firestore Timestamp to JavaScript Date object
-                const eventDate = event.date.toDate();
+        // toEvent() makes the document ID win over the legacy numeric `id`
+        // counter field, which matches what interestedEvents stores.
+        const allEvents = sortEventsByRecency(
+            eventsSnapshot.docs.map(toEvent)
+        );
     
-                // Check if the event date is in the future and if it's in the interestedEvents array
-                return eventDate > now && interestedEvents?.includes(event.id.toString());
-            })
-            .sort((a, b) => b.id - a.id);
+        const eventsList = allEvents.filter(event => {
+            // Upcoming events only — and the document ID is present in
+            // the user's interestedEvents list (null-safe, no crash on
+            // missing dates).
+            return isEventUpcoming(event.date, now)
+                && Array.isArray(interestedEvents)
+                && interestedEvents.includes(event.id);
+        });
     
         setEvents(eventsList);
     };
