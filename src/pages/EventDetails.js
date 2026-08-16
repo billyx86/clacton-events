@@ -1,9 +1,8 @@
-"use client";
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { collection, query, where, getDocs, doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { formatEventDate, getLocationLabel } from '../utils/eventUtils';
 
 import { EmailShareButton, FacebookShareButton, TwitterShareButton } from "react-share"
 
@@ -18,16 +17,14 @@ const EventDetails = () => {
     useEffect(() => {
         const fetchEvent = async () => {
             setLoading(true);
+            setEvent(null);
             try {
-                const eventsCollectionRef = collection(db, 'events');
-                const q = query(eventsCollectionRef, where('id', '==', parseInt(id)));
-                const querySnapshot = await getDocs(q);
-                const eventDocs = querySnapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }));
-                if (eventDocs.length > 0) {
-                    setEvent(eventDocs[0]);
-                    console.log(event.location)
-                } else {
-                    console.log('No such event!');
+                // The route param is the Firestore document ID — fetch it
+                // directly instead of querying the legacy numeric id field.
+                const eventRef = doc(db, 'events', id);
+                const eventSnap = await getDoc(eventRef);
+                if (eventSnap.exists()) {
+                    setEvent({ id: eventSnap.id, ...eventSnap.data() });
                 }
             } catch (error) {
                 console.error('Error fetching event:', error);
@@ -46,12 +43,7 @@ const EventDetails = () => {
         return <div>No event found.</div>;
     }
 
-    const formatDate = (timestamp) => {
-        if (!timestamp) return '';
-        const dateObj = timestamp.toDate();
-        const options = { year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' };
-        return dateObj.toLocaleDateString('en-GB', options);
-    };
+    const locationLabel = getLocationLabel(event.location);
 
     const handleInterest = async () => {
         if (!auth.currentUser) {
@@ -100,33 +92,37 @@ const EventDetails = () => {
                     <div className="event-detail-info">
                         <h3 className="event-detail-title">{event.content}</h3>
                         <p className="event-detail-short-description">{event.shortDescription}</p>
-                        <p className="event-detail-meta"><span className="location-bold">Location:</span>{event.location.label}</p>
-                        <p className="event-detail-meta"><span className="date-bold">Date:</span> {formatDate(event.date)}</p>
+                        {locationLabel && <p className="event-detail-meta"><span className="location-bold">Location:</span>{locationLabel}</p>}
+                        <p className="event-detail-meta"><span className="date-bold">Date:</span> {formatEventDate(event.date)}</p>
                         <p className="event-detail-long-description">{event.longDescription}</p>
                     </div>
                 </div>
                 <div className="right-side-wrapper">
+                    {locationLabel && (
                     <div>
                         <img className="google-maps-static"
-                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${event.location.label}&zoom=18&markers=${event.location.label}&size=640x640&maptype=roadmap&key=${process.env.REACT_APP_GMAPS_STATIC_KEY}`}
+                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(locationLabel)}&zoom=18&markers=${encodeURIComponent(locationLabel)}&size=640x640&maptype=roadmap&key=${process.env.REACT_APP_GMAPS_STATIC_KEY}`}
                         />
                     </div>
+                    )}
+                    {locationLabel && (
                     <div className="maps-buttons">
                         <a 
-                            href={`https://www.google.com/maps/search/?api=1&query=${event.location.label}`}
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationLabel)}`}
                             className="google-maps-clickable-wrapper-left"
                             target="_blank"
                         >
                                 Open in Google Maps
                         </a>
                         <a 
-                            href={`https://www.google.com/maps/dir/?api=1&destination=${event.location.label}`}
+                            href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationLabel)}`}
                             className="google-maps-clickable-wrapper-right"
                             target="_blank"
                         >
-                                Get Directions
+                            Get Directions
                         </a>
                     </div>
+                    )}
                     <div className="event-detail-interaction-menu">
                         {/* Interaction buttons */}
                         <button className="event-detail-button" onClick={handleInterest}>I'm Interested</button>
