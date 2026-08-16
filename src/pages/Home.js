@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import Event from '../components/Event';
+import { toEvent, isEventUpcoming, sortEventsByRecency } from '../utils/eventUtils';
 
 const Home = () => {
   const [events, setEvents] = useState([]);
@@ -12,28 +13,18 @@ const Home = () => {
       const eventsSnapshot = await getDocs(eventsCollectionRef);
       const now = new Date();
       const allEvents = eventsSnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
-        .filter(event => event.date && event.date.toDate() > now);
+        .map(toEvent)
+        .filter(event => isEventUpcoming(event.date, now));
 
-      // Shuffle and pick three events
-      const shuffledEvents = allEvents.sort(() => 0.5 - Math.random());
-      const selectedEvents = shuffledEvents.slice(0, 3);
+      // Heading says "Recently Posted Events" — show the three most recent,
+      // not a random shuffle of the collection.
+      const selectedEvents = sortEventsByRecency(allEvents).slice(0, 3);
 
       setEvents(selectedEvents);
     };
 
     fetchEvents();
   }, []);
-
-  const scrollEvents = (direction) => {
-    const container = document.querySelector('.home-events-container');
-    const scrollAmount = 300;
-    if (direction === 'left') {
-        container.scrollLeft -= scrollAmount;
-    } else {
-        container.scrollLeft += scrollAmount;
-    }
-};
 
   return(
     <main>
