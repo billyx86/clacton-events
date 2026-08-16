@@ -43,7 +43,7 @@ const EventForm = () => {
     };
     
 
-    const [minDateTime, setMinDateTime] = useState(getFormattedCurrentDateTime());
+    const [minDateTime] = useState(getFormattedCurrentDateTime());
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -68,7 +68,7 @@ const EventForm = () => {
         }
 
         return unsubscribe; // Cleanup subscription on unmount
-    }, []);
+    }, [navigate]);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -83,9 +83,8 @@ const EventForm = () => {
         const file = event.target.files[0];
         if (!file) return;
       
-        // Create a canvas and context for resizing
+        // Create a canvas for resizing
         const offScreenCanvas = document.createElement('canvas');
-        const ctx = offScreenCanvas.getContext('2d');
       
         // Set the desired output dimensions
         const maxWidth = 800;

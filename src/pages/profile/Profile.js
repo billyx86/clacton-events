@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { doc, getDoc, getDocs, collection } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../../firebase';
@@ -11,43 +11,7 @@ const Profile = () => {
     const [userProfile, setUserProfile] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-            if (user) {
-                getUserInfo();
-            } else {
-                setLoading(false);
-            }
-        });
-
-        // Cleanup subscription
-        return () => unsubscribe();
-    }, []);
-
-    const getUserInfo = async () => {
-        setLoading(true);
-        const userEmail = auth.currentUser?.email;
-        if (userEmail) {
-            const userRef = doc(db, "users", userEmail);
-            try {
-                const userSnap = await getDoc(userRef);
-                if (userSnap.exists()) {
-                    const userProfileData = userSnap.data();
-                    setUserProfile(userProfileData);
-                    await fetchEvents(userProfileData.interestedEvents); // Fetch events after setting user profile
-                } else {
-                    console.log("No user data found");
-                }
-            } catch (error) {
-                console.error("Error fetching user data:", error);
-            }
-        } else {
-            console.log("No user logged in");
-        }
-        setLoading(false);
-    };
-
-    const fetchEvents = async (interestedEvents) => {
+    const fetchEvents = useCallback(async (interestedEvents) => {
         const eventsCollectionRef = collection(db, "events");
         const eventsSnapshot = await getDocs(eventsCollectionRef);
         const now = new Date(); // Current date and time
@@ -68,7 +32,43 @@ const Profile = () => {
         });
     
         setEvents(eventsList);
-    };
+    }, []);
+
+    const getUserInfo = useCallback(async () => {
+        setLoading(true);
+        const userEmail = auth.currentUser?.email;
+        if (userEmail) {
+            const userRef = doc(db, "users", userEmail);
+            try {
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    const userProfileData = userSnap.data();
+                    setUserProfile(userProfileData);
+                    await fetchEvents(userProfileData.interestedEvents); // Fetch events after setting user profile
+                } else {
+                    console.log("No user data found");
+                }
+            } catch (error) {
+                console.error("Error fetching user data:", error);
+            }
+        } else {
+            console.log("No user logged in");
+        }
+        setLoading(false);
+    }, [fetchEvents]);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            if (user) {
+                getUserInfo();
+            } else {
+                setLoading(false);
+            }
+        });
+
+        // Cleanup subscription
+        return () => unsubscribe();
+    }, [getUserInfo]);
 
     if (loading) {
         return <div>Loading...</div>;

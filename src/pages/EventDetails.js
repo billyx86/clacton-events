@@ -102,6 +102,7 @@ const EventDetails = () => {
                     <div>
                         <img className="google-maps-static"
                         src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(locationLabel)}&zoom=18&markers=${encodeURIComponent(locationLabel)}&size=640x640&maptype=roadmap&key=${process.env.REACT_APP_GMAPS_STATIC_KEY}`}
+                        alt={`Map of ${locationLabel}`}
                         />
                     </div>
                     )}
@@ -111,6 +112,7 @@ const EventDetails = () => {
                             href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(locationLabel)}`}
                             className="google-maps-clickable-wrapper-left"
                             target="_blank"
+                            rel="noreferrer"
                         >
                                 Open in Google Maps
                         </a>
@@ -118,6 +120,7 @@ const EventDetails = () => {
                             href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(locationLabel)}`}
                             className="google-maps-clickable-wrapper-right"
                             target="_blank"
+                            rel="noreferrer"
                         >
                             Get Directions
                         </a>
