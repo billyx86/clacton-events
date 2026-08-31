@@ -10,15 +10,17 @@ import Pica from 'pica';
 
 import '../../styles/posting/EventForm.css'
 
+const INITIAL_FORM_DATA = {
+    content: '',
+    shortDescription: '',
+    longDescription: '',
+    date: '',
+    imageUrl: '',
+    websiteUrl: ''
+};
+
 const EventForm = () => {
-    const [formData, setFormData] = useState({
-        content: '',
-        shortDescription: '',
-        longDescription: '',
-        date: '',
-        imageUrl: '',
-        websiteUrl: ''
-    });
+    const [formData, setFormData] = useState(INITIAL_FORM_DATA);
     const [eventLocation, setEventLocation] = useState('Clacton-on-Sea');
     const [user, setUser] = useState(null);
     const [loggedInName, setLoggedInName] = useState('');
@@ -117,7 +119,10 @@ const EventForm = () => {
               })
               .then(snapshot => getDownloadURL(snapshot.ref))
               .then(imageUrl => {
-                setFormData({ ...formData, imageUrl });
+                // Functional update: the closure above captured
+                // `formData` when the file was picked, which can be
+                // stale by the time the upload finishes.
+                setFormData((prev) => ({ ...prev, imageUrl }));
                 // Handle the rest of your form submission here
               })
               .catch(error => {
@@ -173,7 +178,8 @@ const EventForm = () => {
             });
 
             console.log("Event successfully listed!");
-            setFormData({ content: '', shortDescription: '', longDescription: '', location: '', imageUrl: '', websiteUrl: '' }); // Reset form
+            setFormData(INITIAL_FORM_DATA); // Reset form
+            setEventLocation('Clacton-on-Sea');
             navigate('/events');
         } catch (error) {
             console.error("Error listing event: ", error);

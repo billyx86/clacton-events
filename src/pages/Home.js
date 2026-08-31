@@ -1,29 +1,52 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+} from 'firebase/firestore';
 import { db } from '../firebase';
 import Event from '../components/Event';
-import { toEvent, isEventUpcoming, sortEventsByRecency } from '../utils/eventUtils';
+import { toEvent, isEventUpcoming } from '../utils/eventUtils';
+
+const RECENT_COUNT = 3;
 
 const Home = () => {
   const [events, setEvents] = useState([]);
 
   useEffect(() => {
+    let cancelled = false;
+
     const fetchEvents = async () => {
-      const eventsCollectionRef = collection(db, "events");
-      const eventsSnapshot = await getDocs(eventsCollectionRef);
-      const now = new Date();
-      const allEvents = eventsSnapshot.docs
-        .map(toEvent)
-        .filter(event => isEventUpcoming(event.date, now));
+      try {
+        // Server-side: most recently created events only. Before this was
+        // added, the page pulled the *entire* events collection into the
+        // browser for three cards (issue #7). Documents without `createdOn`
+        // (very old events) sort last in Firestore, which is fine — the
+        // heading is "Recently Posted Events".
+        const recentQuery = query(
+          collection(db, 'events'),
+          orderBy('createdOn', 'desc'),
+          limit(RECENT_COUNT)
+        );
+        const eventsSnapshot = await getDocs(recentQuery);
+        const now = new Date();
+        const recent = eventsSnapshot.docs
+          .map(toEvent)
+          .filter((event) => isEventUpcoming(event.date, now));
 
-      // Heading says "Recently Posted Events" — show the three most recent,
-      // not a random shuffle of the collection.
-      const selectedEvents = sortEventsByRecency(allEvents).slice(0, 3);
-
-      setEvents(selectedEvents);
+        if (cancelled) return;
+        setEvents(recent);
+      } catch (error) {
+        console.error('Error fetching recent events:', error);
+      }
     };
 
     fetchEvents();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return(
@@ -39,7 +62,7 @@ const Home = () => {
                   key={event.id} 
                   id={event.id} 
                   title={event.content}
-                  description={event.shortDescription}
+                  description={event.shortDescription} 
                   imageUrl={event.imageUrl}
                   location={event.location}
                   date={event.date}

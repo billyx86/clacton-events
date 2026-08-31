@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { formatEventDate, getLocationLabel } from '../utils/eventUtils';
+import { formatEventDate, getLocationLabel, sanitizeEventUrl } from '../utils/eventUtils';
 
 import { EmailShareButton, FacebookShareButton, TwitterShareButton } from "react-share"
 
@@ -44,6 +44,10 @@ const EventDetails = () => {
     }
 
     const locationLabel = getLocationLabel(event.location);
+    // Events are user-generated: the stored website URL could be a
+    // `javascript:` payload. Only render the link when it survives
+    // sanitization as an http(s) URL.
+    const websiteUrl = sanitizeEventUrl(event.websiteUrl);
 
     const handleInterest = async () => {
         if (!auth.currentUser) {
@@ -130,7 +134,7 @@ const EventDetails = () => {
                         {/* Interaction buttons */}
                         <button className="event-detail-button" onClick={handleInterest}>I'm Interested</button>
                         {interestFeedback && <p className="interest-feedback">{interestFeedback}</p>}
-                        {event.websiteUrl && <a className="button-url-wrapper" href={`${event.websiteUrl}`}><button className="event-detail-button">Open Event Website</button></a>}
+                        {websiteUrl && <a className="button-url-wrapper" href={websiteUrl} target="_blank" rel="noopener noreferrer"><button className="event-detail-button">Open Event Website</button></a>}
                         {/* Not implemented while I figure out a use for this.
                         <button className="event-detail-button">Save for Later</button>
                     <button className="event-detail-button">Share</button> */}
