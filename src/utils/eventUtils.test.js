@@ -10,6 +10,7 @@ import {
     sortEventsByRecency,
     getLocationLabel,
     formatEventDate,
+    sanitizeEventUrl,
 } from './eventUtils';
 
 describe('toEvent', () => {
@@ -136,5 +137,41 @@ describe('formatEventDate', () => {
     test('returns empty string for missing date', () => {
         expect(formatEventDate(undefined)).toBe('');
         expect(formatEventDate(null)).toBe('');
+    });
+});
+
+describe('sanitizeEventUrl', () => {
+    test('allows absolute http and https URLs', () => {
+        expect(sanitizeEventUrl('https://www.clacton-events.example')).toBe(
+            'https://www.clacton-events.example'
+        );
+        expect(sanitizeEventUrl('http://example.org/page?a=1#top')).toBe(
+            'http://example.org/page?a=1#top'
+        );
+    });
+
+    test('rejects javascript: payloads (stored XSS vector)', () => {
+        expect(sanitizeEventUrl('javascript:alert(1)')).toBe('');
+        expect(sanitizeEventUrl('  JavaScript:alert(1)  ')).toBe('');
+        expect(sanitizeEventUrl('JAVASCRIPT:alert(1)')).toBe('');
+    });
+
+    test('rejects data:, vbscript: and other schemes', () => {
+        expect(sanitizeEventUrl('data:text/html,<script>alert(1)</script>')).toBe('');
+        expect(sanitizeEventUrl('vbscript:msgbox(1)')).toBe('');
+        expect(sanitizeEventUrl('file:///etc/passwd')).toBe('');
+    });
+
+    test('rejects relative and scheme-less URLs', () => {
+        expect(sanitizeEventUrl('/events/123')).toBe('');
+        expect(sanitizeEventUrl('example.com')).toBe('');
+        expect(sanitizeEventUrl('www.example.com')).toBe('');
+    });
+
+    test('returns empty string for missing, null, or garbage input', () => {
+        expect(sanitizeEventUrl(undefined)).toBe('');
+        expect(sanitizeEventUrl(null)).toBe('');
+        expect(sanitizeEventUrl('')).toBe('');
+        expect(sanitizeEventUrl('not a url at all')).toBe('');
     });
 });

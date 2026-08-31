@@ -1,48 +1,105 @@
 // EventsPage.js
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Event from '../components/Event';
-import { collection, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  getDocs,
+  limit,
+  orderBy,
+  query,
+  startAfter,
+} from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { toEvent, isEventUpcoming, filterEventsByQuery, sortEventsByRecency } from '../utils/eventUtils';
+import {
+  EVENT_PAGE_SIZE,
+  filterEventsByQuery,
+  isEventUpcoming,
+  toEvent,
+} from '../utils/eventUtils';
 
 const EventsPage = () => {
     const [events, setEvents] = useState([]);
     const [searchQuery, setSearchQuery] = useState('');
     const [user, setUser] = useState(null);
+    // Cursor pagination state (issue #7 — the page used to pull the whole
+    // collection on every visit).
+    const [lastSnapshot, setLastSnapshot] = useState(null);
+    const [hasMore, setHasMore] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [fetchError, setFetchError] = useState(false);
     const navigate = useNavigate();
 
-    useEffect(() => {
-      const unsubscribe = onAuthStateChanged(auth, (user) => {
-        setUser(user || null);
-      });
-
-      const fetchEvents = async () => {
-          const eventsCollectionRef = collection(db, "events");
-          const eventsSnapshot = await getDocs(eventsCollectionRef);
-          const now = new Date();
-          // toEvent() makes the document ID the canonical id; the list is
-          // sorted newest-first (createdOn, then legacy counter).
-          const eventsList = sortEventsByRecency(
-            eventsSnapshot.docs
-              .map(toEvent)
-              .filter(event => isEventUpcoming(event.date, now)) // Filter out past events
-          );
-
-          setEvents(eventsList);
-      };
-
-      fetchEvents();
-
-      return unsubscribe;
+    // Newest-first on the server; the client only filters what it already
+    // has. Past events can only appear in the *loaded* window (the form
+    // requires future dates, so the collection is mostly upcoming).
+    const buildQuery = useCallback((cursor) => {
+        const constraints = [
+            orderBy('createdOn', 'desc'),
+            limit(EVENT_PAGE_SIZE),
+        ];
+        if (cursor) {
+            constraints.splice(1, 0, startAfter(cursor));
+        }
+        return query(collection(db, 'events'), ...constraints);
     }, []);
 
-    function handleSearchInput(event) {
-        setSearchQuery(event.target.value);
-    }
+    const applySnapshot = (snapshot) => {
+        setEvents(snapshot.docs.map(toEvent));
+        setLastSnapshot(snapshot.docs[snapshot.docs.length - 1] ?? null);
+        setHasMore(snapshot.docs.length === EVENT_PAGE_SIZE);
+    };
 
-    const filteredEvents = filterEventsByQuery(events, searchQuery);
+    const loadMore = useCallback(async () => {
+        if (loadingMore || !hasMore || !lastSnapshot) return;
+        setLoadingMore(true);
+        try {
+            const snapshot = await getDocs(buildQuery(lastSnapshot));
+            setEvents((prev) => [...prev, ...snapshot.docs.map(toEvent)]);
+            setLastSnapshot(snapshot.docs[snapshot.docs.length - 1] ?? lastSnapshot);
+            setHasMore(snapshot.docs.length === EVENT_PAGE_SIZE);
+        } catch (error) {
+            console.error('Error loading more events:', error);
+            setFetchError(true);
+        } finally {
+            setLoadingMore(false);
+        }
+    }, [buildQuery, hasMore, lastSnapshot, loadingMore]);
+
+    useEffect(() => {
+        const unsubscribe = onAuthStateChanged(auth, (user) => {
+            setUser(user || null);
+        });
+
+        let cancelled = false;
+        const init = async () => {
+            const snapshot = await getDocs(buildQuery(null));
+            if (cancelled) return;
+            applySnapshot(snapshot);
+        };
+
+        init().catch((error) => {
+            console.error('Error fetching events:', error);
+            if (!cancelled) setFetchError(true);
+        });
+
+        return () => {
+            cancelled = true;
+            unsubscribe();
+        };
+    }, [buildQuery]);
+
+    // Exposed so a retry button can refetch page one.
+    const handleSearchInput = (event) => {
+        setSearchQuery(event.target.value);
+    };
+
+    const now = new Date();
+    const filteredEvents = filterEventsByQuery(
+        events.filter((event) => isEventUpcoming(event.date, now)),
+        searchQuery
+    );
 
     return (
         <main>
@@ -62,6 +119,12 @@ const EventsPage = () => {
               </div>
             )}
 
+            {fetchError && (
+              <p role="alert" style={{ color: '#c62828' }}>
+                Something went wrong loading events. Please refresh.
+              </p>
+            )}
+
             <div className="main-wrapper">
                 <div className="main-container">
                     {filteredEvents.map(filteredEvent => (
@@ -75,6 +138,17 @@ const EventsPage = () => {
                             date={filteredEvent.date}
                         />
                     ))}
+                    {hasMore && (
+                        <div className="le-button-wrapper">
+                            <button
+                                onClick={loadMore}
+                                disabled={loadingMore}
+                                className="list-event-button"
+                            >
+                                {loadingMore ? 'Loading…' : 'Load more events'}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </main>

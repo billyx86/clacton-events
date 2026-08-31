@@ -94,4 +94,31 @@ src/
   utils/
     eventUtils.js          # normalising / filtering / sorting helpers
     eventUtils.test.js     # unit tests for the helpers
+firebase/
+  firestore.rules          # Firestore security rules
+  firestore.rules.test.js  # rules tests (run against the emulator)
 ```
+
+## Testing
+
+Unit tests run with CRA's built-in Jest:
+
+```bash
+npm test            # watch mode
+CI=true npm test    # single run (used by CI)
+```
+
+Firestore security rules are verified against the real rules engine using the
+local Firestore emulator (`@firebase/rules-unit-testing` + `firebase-tools`).
+The emulator needs a Java runtime. CI runs this automatically; locally:
+
+```bash
+npx firebase emulators:start --only firestore --project demo-clacton-events &
+node firebase/firestore.rules.test.js
+```
+
+The rules model:
+
+- `events/{eventId}` — anyone may read (`get`, `list`); only signed-in users
+  may create, update, or delete.
+- `users/{uid}` — a user may read only their own document (`get`, owner only).

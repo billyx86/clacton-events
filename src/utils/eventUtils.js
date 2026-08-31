@@ -24,6 +24,37 @@ export const toEvent = (snapshot) => {
 };
 
 /**
+ * Events per page for the paginated events listing.
+ */
+export const EVENT_PAGE_SIZE = 20;
+
+/**
+ * Validate a user-provided URL before it is used in an `href`.
+ *
+ * Events store an arbitrary `websiteUrl` typed in by posters. Rendering it
+ * directly in an `href` allows stored XSS: `javascript:alert(1)` (or a
+ * `data:` text/html page) executes in the app's origin when clicked.
+ * Only absolute `http:` / `https:` URLs are returned; everything else
+ * (missing scheme, `javascript:`, `data:`, `vbscript:`, …) becomes `''`.
+ */
+export const sanitizeEventUrl = (raw) => {
+  if (!raw) return '';
+  const value = String(raw).trim();
+  if (!value) return '';
+  // Require an explicit scheme — relative paths are not valid event sites.
+  if (!/^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(value)) return '';
+  let parsed;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return '';
+  }
+  return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+    ? value
+    : '';
+};
+
+/**
  * Get a displayable label for an event location.
  * Older events store a `{ label, ... }` object from the Places Autocomplete
  * `onLoad` payload; newer ones (and the current form) store a plain string.
