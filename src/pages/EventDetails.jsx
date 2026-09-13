@@ -105,7 +105,7 @@ const EventDetails = () => {
                     {locationLabel && (
                     <div>
                         <img className="google-maps-static"
-                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(locationLabel)}&zoom=18&markers=${encodeURIComponent(locationLabel)}&size=640x640&maptype=roadmap&key=${process.env.REACT_APP_GMAPS_STATIC_KEY}`}
+                        src={`https://maps.googleapis.com/maps/api/staticmap?center=${encodeURIComponent(locationLabel)}&zoom=18&markers=${encodeURIComponent(locationLabel)}&size=640x640&maptype=roadmap&key=${import.meta.env.REACT_APP_GMAPS_STATIC_KEY}`}
                         alt={`Map of ${locationLabel}`}
                         />
                     </div>
