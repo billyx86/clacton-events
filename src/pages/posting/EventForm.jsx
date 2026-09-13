@@ -224,7 +224,7 @@ const EventForm = () => {
                     placeholder="Website URL (optional)"  
                 />
                 <GooglePlacesAutocomplete
-                    apiKey={`${process.env.REACT_APP_GMAPS_STATIC_KEY}`}
+                    apiKey={`${import.meta.env.REACT_APP_GMAPS_STATIC_KEY}`}
                     selectProps={{
                         eventLocation,
                         onChange: setEventLocation,
