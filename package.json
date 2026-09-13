@@ -2,33 +2,34 @@
   "name": "local-events-app",
   "version": "0.1.0",
   "private": true,
+  "type": "module",
   "dependencies": {
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "axios": "^1.6.5",
-    "dotenv": "^16.3.1",
     "firebase": "^10.7.1",
     "pica": "^9.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-google-places-autocomplete": "^4.0.1",
     "react-router-dom": "^6.21.1",
-    "react-scripts": "5.0.1",
     "react-share": "^5.0.3",
     "web-vitals": "^2.1.4"
   },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "firebase-tools": "^15.28.2",
+    "jsdom": "^25.0.1",
+    "vite": "^6.0.7",
+    "vitest": "^2.1.8"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
+  "scripts": {
+    "start": "vite",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "browserslist": {
     "production": [
@@ -41,9 +42,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@firebase/rules-unit-testing": "^3.0.0",
-    "firebase-tools": "^15.28.2"
   }
 }

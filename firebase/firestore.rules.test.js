@@ -9,19 +9,18 @@
  *
  * CI job: "rules" in .github/workflows/ci.yml runs the same two steps.
  */
-const fs = require('fs');
-const path = require('path');
-const {
+import fs from 'node:fs';
+import {
   initializeTestEnvironment,
   assertSucceeds,
   assertFails,
-} = require('@firebase/rules-unit-testing');
+} from '@firebase/rules-unit-testing';
 
 const ALICE = 'alice@example.com';
 const BOB = 'bob@example.com';
 
 const rules = fs.readFileSync(
-  path.join(__dirname, 'firestore.rules'),
+  new URL('./firestore.rules', import.meta.url),
   'utf8'
 );
 
