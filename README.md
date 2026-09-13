@@ -3,8 +3,7 @@
 A community events app for Clacton-on-Sea. Browse upcoming local events,
 view details, mark your interest, and list your own — for free.
 
-Built with React (Create React App) and Firebase (Auth, Firestore,
-Storage).
+Built with React (Vite) and Firebase (Auth, Firestore, Storage).
 
 ## Features
 
@@ -26,8 +25,8 @@ npm install
 
 ### Firebase configuration
 
-The app reads its Firebase config from environment variables — create a
-`.env` file in the project root:
+The app reads its Firebase config from environment variables. Copy
+`.env.example` to a `.env` file in the project root and fill it in:
 
 ```
 REACT_APP_FIREBASE_API_KEY=...
@@ -71,7 +70,7 @@ maintained transactionally so concurrent posters can't collide.
 
 ```bash
 npm start          # dev server on :3000
-npm test           # unit tests (Jest, via react-scripts)
+npm test           # unit tests (Vitest)
 npm run build      # production build
 ```
 
@@ -80,17 +79,19 @@ npm run build      # production build
 ```
 src/
   firebase.js              # Firebase init (auth, firestore, storage)
-  Main.js                  # router
+  main.jsx                 # entry point
+  App.jsx                  # layout
+  Main.jsx                 # router
   components/
-    Header.js              # nav + auth-aware user menu
-    Event.js               # event card
+    Header.jsx             # nav + auth-aware user menu
+    Event.jsx              # event card
   pages/
-    Home.js                # hero + 3 most recent events
-    EventsPage.js          # full listing with search
-    EventDetails.js        # detail view + "I'm interested"
-    auth/Login.js, Signup.js
-    posting/EventForm.js   # list a new event
-    profile/Profile.js     # user's upcoming interested events
+    Home.jsx               # hero + 3 most recent events
+    EventsPage.jsx         # full listing with search
+    EventDetails.jsx       # detail view + "I'm interested"
+    auth/Login.jsx, Signup.jsx
+    posting/EventForm.jsx  # list a new event
+    profile/Profile.jsx    # user's upcoming interested events
   utils/
     eventUtils.js          # normalising / filtering / sorting helpers
     eventUtils.test.js     # unit tests for the helpers
@@ -101,11 +102,11 @@ firebase/
 
 ## Testing
 
-Unit tests run with CRA's built-in Jest:
+Unit tests run with Vitest (jsdom environment, jest-dom matchers):
 
 ```bash
-npm test            # watch mode
-CI=true npm test    # single run (used by CI)
+npm test            # single run (used by CI)
+npm run test:watch  # watch mode
 ```
 
 Firestore security rules are verified against the real rules engine using the
