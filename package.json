@@ -10,8 +10,7 @@
     "react-dom": "^18.2.0",
     "react-google-places-autocomplete": "^4.0.1",
     "react-router-dom": "^6.21.1",
-    "react-share": "^5.0.3",
-    "web-vitals": "^2.1.4"
+    "react-share": "^5.0.3"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^3.0.0",
