@@ -95,6 +95,8 @@ src/
   utils/
     eventUtils.js          # normalising / filtering / sorting helpers
     eventUtils.test.js     # unit tests for the helpers
+    authorName.js          # resolves the non-empty event author (issue #12)
+    authorName.test.js     # unit tests for the author resolver
 firebase/
   firestore.rules          # Firestore security rules
   firestore.rules.test.js  # rules tests (run against the emulator)

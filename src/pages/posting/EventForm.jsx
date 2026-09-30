@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import Pica from 'pica';
+import { resolveAuthorName } from '../../utils/authorName';
 
 import '../../styles/posting/EventForm.css'
 
@@ -60,13 +61,21 @@ const EventForm = () => {
 
         const getUserName = async (user) => {
             const userRef = doc(db, "users", user.email);
-            const userSnap = await getDoc(userRef);
-    
-            if (userSnap.exists()) {
-                setLoggedInName(userSnap.data().name);
-            } else {
-                console.log("No such document!");
+            // A permission error (or any other read failure) must not reject
+            // the onAuthStateChanged callback silently — treat it the same
+            // as a missing document and fall back. (issue #12)
+            let docData = null;
+            try {
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    docData = userSnap.data();
+                }
+            } catch (error) {
+                console.error("Failed to read user profile document:", error);
             }
+            // resolveAuthorName always returns a non-empty string:
+            // users/<email> name → auth displayName → email local part.
+            setLoggedInName(resolveAuthorName(docData, user));
         }
 
         return unsubscribe; // Cleanup subscription on unmount
