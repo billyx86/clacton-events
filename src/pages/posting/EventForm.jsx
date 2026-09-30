@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import Pica from 'pica';
+import { resolveAuthorName } from '../../utils/authorName';
 
 import '../../styles/posting/EventForm.css'
 
@@ -19,6 +20,11 @@ const INITIAL_FORM_DATA = {
     websiteUrl: ''
 };
 
+// Cap on uploaded poster images (issue #11). Anything larger is rejected
+// before it goes through Pica's resize path, so a 20 MB photo can't be
+// decoded/resized client-side first.
+const MAX_IMAGE_BYTES = 8 * 1024 * 1024; // 8 MB
+
 const EventForm = () => {
     const [formData, setFormData] = useState(INITIAL_FORM_DATA);
     const [eventLocation, setEventLocation] = useState('Clacton-on-Sea');
@@ -26,6 +32,10 @@ const EventForm = () => {
     const [loggedInName, setLoggedInName] = useState('');
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState('');
+    // issue #11: local preview of the chosen image, plus a dedicated error
+    // channel so upload/decode failures never die silently in console.error.
+    const [imagePreviewUrl, setImagePreviewUrl] = useState('');
+    const [imageError, setImageError] = useState('');
     const navigate  = useNavigate();
     const fileInputRef = useRef(null);
 
@@ -60,13 +70,21 @@ const EventForm = () => {
 
         const getUserName = async (user) => {
             const userRef = doc(db, "users", user.email);
-            const userSnap = await getDoc(userRef);
-    
-            if (userSnap.exists()) {
-                setLoggedInName(userSnap.data().name);
-            } else {
-                console.log("No such document!");
+            // A permission error (or any other read failure) must not reject
+            // the onAuthStateChanged callback silently — treat it the same
+            // as a missing document and fall back. (issue #12)
+            let docData = null;
+            try {
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    docData = userSnap.data();
+                }
+            } catch (error) {
+                console.error("Failed to read user profile document:", error);
             }
+            // resolveAuthorName always returns a non-empty string:
+            // users/<email> name → auth displayName → email local part.
+            setLoggedInName(resolveAuthorName(docData, user));
         }
 
         return unsubscribe; // Cleanup subscription on unmount
@@ -82,29 +100,55 @@ const EventForm = () => {
     };
 
     const handleImageUpload = async (event) => {
-        const file = event.target.files[0];
+        const file = event.target.files && event.target.files[0];
+        // Let the same file be re-selected after a failed attempt.
+        if (event.target) event.target.value = '';
+        setImageError('');
         if (!file) return;
-      
+
+        // Validate before the pipeline (issue #11): reject non-images and
+        // anything over the cap so a huge photo never hits the resize path.
+        if (file.type && !file.type.startsWith('image/')) {
+            setImageError(`"${file.name}" isn't an image file. Please choose a PNG, JPEG, or similar.`);
+            return;
+        }
+        if (file.size > MAX_IMAGE_BYTES) {
+            setImageError(`"${file.name}" is ${Math.round(file.size / (1024 * 1024))} MB. Keep images under 8 MB.`);
+            return;
+        }
+
         // Create a canvas for resizing
         const offScreenCanvas = document.createElement('canvas');
-      
+
         // Set the desired output dimensions
         const maxWidth = 800;
         const maxHeight = 600;
-      
+
         // Read the uploaded file as a data URL
         const reader = new FileReader();
+        reader.onerror = () => {
+            setImageError('The image file could not be read. Please try again.');
+        };
         reader.onload = (e) => {
           const img = new Image();
+          // issue #11: a file that fails to decode used to leave the form
+          // frozen with no feedback. Surface it, and show the preview only
+          // once we know the image is actually decodable.
+          img.onerror = () => {
+            setImageError('That image could not be decoded. Try a standard PNG or JPEG.');
+          };
           img.onload = () => {
+            // The image is decodable — show the preview immediately so the
+            // user sees what will be posted while the upload runs.
+            setImagePreviewUrl(e.target.result);
             // Calculate the scaling factor to maintain aspect ratio
             let scaleFactor = Math.min(maxWidth / img.width, maxHeight / img.height);
             scaleFactor = (scaleFactor > 1) ? 1 : scaleFactor; // Don't scale up
-      
+    
             // Set canvas dimensions proportional to the image scaled to the max sizes
             offScreenCanvas.width = img.width * scaleFactor;
             offScreenCanvas.height = img.height * scaleFactor;
-      
+    
             // Resize the image with Pica
             Pica().resize(img, offScreenCanvas)
               .then(resizedCanvas => Pica().toBlob(resizedCanvas, 'image/jpeg', 0.90)) // Adjust the quality as needed
@@ -113,7 +157,7 @@ const EventForm = () => {
                 const userId = auth.currentUser.uid;
                 const timestamp = new Date().getTime();
                 const uniquePath = `events/${userId}/${timestamp}-${file.name}`;
-      
+    
                 const storageRef = ref(storage, uniquePath);
                 return uploadBytes(storageRef, blob);
               })
@@ -126,7 +170,10 @@ const EventForm = () => {
                 // Handle the rest of your form submission here
               })
               .catch(error => {
+                // issue #11: upload/decode failures were console.error-only,
+                // leaving the user staring at a required-empty field.
                 console.error('Error uploading resized image: ', error);
+                setImageError('The image upload failed. Please try again.');
               });
           };
           img.src = e.target.result;
@@ -180,6 +227,10 @@ const EventForm = () => {
             console.log("Event successfully listed!");
             setFormData(INITIAL_FORM_DATA); // Reset form
             setEventLocation('Clacton-on-Sea');
+            // Reset the image upload UI (issue #11) alongside the form so a
+            // stale preview/error doesn't linger on the next event.
+            setImagePreviewUrl('');
+            setImageError('');
             navigate('/events');
         } catch (error) {
             console.error("Error listing event: ", error);
@@ -260,6 +311,19 @@ const EventForm = () => {
                         Upload Image
                     </button>
                 </div>
+                {imagePreviewUrl && (
+                    <div className="image-preview-wrapper">
+                        <img
+                            src={imagePreviewUrl}
+                            alt="Preview of the image about to be uploaded"
+                            className="image-preview"
+                            style={{ maxWidth: '240px', maxHeight: '180px', borderRadius: '8px', display: 'block' }}
+                        />
+                    </div>
+                )}
+                {imageError && (
+                    <p role="alert" style={{ color: '#c62828' }}>{imageError}</p>
+                )}
                 <button type="submit" disabled={submitting}>
                     {submitting ? 'Submitting…' : 'Submit Event'}
                 </button>
