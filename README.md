@@ -14,7 +14,8 @@ Built with React (Vite) and Firebase (Auth, Firestore, Storage).
   and see them on their profile (upcoming only).
 - **Post an event** — title, descriptions, date, location (Google Places
   autocomplete) and image (URL or upload, auto-resized to keep uploads
-  small).
+  small; uploads are capped at 8 MB with a live preview, and decode/upload
+  failures are surfaced inline instead of failing silently).
 - **Accounts** — personal and business sign-ups.
 
 ## Getting started
