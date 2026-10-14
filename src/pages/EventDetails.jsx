@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { doc, updateDoc, arrayUnion, getDoc } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
 import { formatEventDate, getLocationLabel, sanitizeEventUrl } from '../utils/eventUtils';
 
@@ -13,6 +13,7 @@ const EventDetails = () => {
     const [event, setEvent] = useState(null);
     const [loading, setLoading] = useState(true);
     const [interestFeedback, setInterestFeedback] = useState('');
+    const [isInterested, setIsInterested] = useState(false);
 
     useEffect(() => {
         const fetchEvent = async () => {
@@ -33,6 +34,33 @@ const EventDetails = () => {
         };
         fetchEvent();
 
+    }, [id]);
+
+    // Reflect whether the signed-in user has already shown interest in this
+    // event, so the button can offer to withdraw as well as add (issue #23).
+    // Re-derived whenever the event (route param) changes.
+    useEffect(() => {
+        if (!auth.currentUser) {
+            setIsInterested(false);
+            return;
+        }
+        let cancelled = false;
+        const loadInterest = async () => {
+            try {
+                const userRef = doc(db, "users", auth.currentUser.email);
+                const userDoc = await getDoc(userRef);
+                if (!cancelled && userDoc.exists()) {
+                    const interested = userDoc.data().interestedEvents ?? [];
+                    setIsInterested(Array.isArray(interested) && interested.includes(id));
+                }
+            } catch (error) {
+                console.error('Error loading interest state:', error);
+            }
+        };
+        loadInterest();
+        return () => {
+            cancelled = true;
+        };
     }, [id]);
 
     if (loading) {
@@ -58,26 +86,35 @@ const EventDetails = () => {
 
         const userEmail = auth.currentUser.email;
         const userRef = doc(db, "users", userEmail);
-        
+
         try {
             const userDoc = await getDoc(userRef);
-            if (userDoc.exists()) {
-                const userData = userDoc.data();
+            if (!userDoc.exists()) {
+                console.error("User document does not exist");
+                setInterestFeedback("Error: User document does not exist.");
+                return;
+            }
 
-                // Check if the user has already shown interest in this event
-                if (userData.interestedEvents && userData.interestedEvents.includes(id)) {
-                    setInterestFeedback("You have already shown interest in this event.");
-                    return;
-                }
+            const userData = userDoc.data();
+            const interestedEvents = Array.isArray(userData.interestedEvents)
+                ? userData.interestedEvents
+                : [];
 
-                // Update the user's interested events
+            // Toggle: if the event is already in the list, withdraw it;
+            // otherwise add it. arrayUnion/arrayRemove are atomic server-side
+            // operations, so concurrent clicks stay race-safe (issue #23).
+            if (interestedEvents.includes(id)) {
+                await updateDoc(userRef, {
+                    interestedEvents: arrayRemove(id)
+                });
+                setIsInterested(false);
+                setInterestFeedback("Interest removed.");
+            } else {
                 await updateDoc(userRef, {
                     interestedEvents: arrayUnion(id)
                 });
+                setIsInterested(true);
                 setInterestFeedback("You have successfully shown interest in this event.");
-            } else {
-                console.error("User document does not exist");
-                setInterestFeedback("Error: User document does not exist.");
             }
         } catch (error) {
             console.error("Error updating user's interested events:", error);
@@ -132,7 +169,7 @@ const EventDetails = () => {
                     )}
                     <div className="event-detail-interaction-menu">
                         {/* Interaction buttons */}
-                        <button className="event-detail-button" onClick={handleInterest}>I'm Interested</button>
+                        <button className="event-detail-button" onClick={handleInterest}>{isInterested ? "Interested ✓" : "I'm Interested"}</button>
                         {interestFeedback && <p className="interest-feedback">{interestFeedback}</p>}
                         {websiteUrl && <a className="button-url-wrapper" href={websiteUrl} target="_blank" rel="noopener noreferrer"><button className="event-detail-button">Open Event Website</button></a>}
                         {/* Not implemented while I figure out a use for this.
