@@ -10,6 +10,7 @@ import {
     where,
 } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 import { auth, db } from '../../firebase';
 import Event from '../../components/Event';
 import { isEventUpcoming, sortEventsByRecency } from '../../utils/eventUtils';
@@ -22,6 +23,7 @@ const Profile = () => {
     const [events, setEvents] = useState([]); // Initialize as an array
     const [userProfile, setUserProfile] = useState(null);
     const [loading, setLoading] = useState(true);
+    const navigate = useNavigate();
 
     const fetchEvents = useCallback(async (interestedEvents) => {
         const eventIds = Array.isArray(interestedEvents)
@@ -95,13 +97,20 @@ const Profile = () => {
             if (user) {
                 getUserInfo();
             } else {
+                // Logged out: /profile has nothing to show. Redirect to the
+                // login page rather than rendering a permanent "No user
+                // profile data." dead end (issue #17). This callback only
+                // fires once auth state has resolved, so a returning
+                // authenticated user takes the branch above and never sees
+                // the login page flash.
                 setLoading(false);
+                navigate('/login');
             }
         });
 
         // Cleanup subscription
         return () => unsubscribe();
-    }, [getUserInfo]);
+    }, [getUserInfo, navigate]);
 
     if (loading) {
         return <div>Loading...</div>;

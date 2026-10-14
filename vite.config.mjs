@@ -9,13 +9,13 @@ export default defineConfig({
   envPrefix: 'REACT_APP_',
   server: { port: 3000 },
   test: {
-    // Vitest picks up *.test.js in src/. globals: true keeps the existing
-    // describe/test/expect style (ported from Jest) unchanged.
+    // Vitest picks up *.test.js(x) in src/. globals: true keeps the
+    // existing describe/test/expect style (ported from Jest) unchanged.
     // The Firestore rules tests (firebase/) run against the emulator, not
     // here — see firebase/firestore.rules.test.js.
     globals: true,
     environment: 'jsdom',
-    include: ['src/**/*.test.js'],
+    include: ['src/**/*.test.{js,jsx}'],
     setupFiles: './src/setupTests.js',
   },
 });
