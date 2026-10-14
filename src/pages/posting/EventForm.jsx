@@ -6,7 +6,6 @@ import { auth, db, storage } from '../../firebase';
 import { useNavigate } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
-import Pica from 'pica';
 import { resolveAuthorName } from '../../utils/authorName';
 
 import '../../styles/posting/EventForm.css'
@@ -149,9 +148,17 @@ const EventForm = () => {
             offScreenCanvas.width = img.width * scaleFactor;
             offScreenCanvas.height = img.height * scaleFactor;
     
-            // Resize the image with Pica
-            Pica().resize(img, offScreenCanvas)
-              .then(resizedCanvas => Pica().toBlob(resizedCanvas, 'image/jpeg', 0.90)) // Adjust the quality as needed
+            // Resize the image with Pica. Pica is dynamically imported:
+            // it is only needed when a user actually picks an image file,
+            // so keeping it out of the initial bundle shaves it off the
+            // ~800 kB first paint (issue #18).
+            import('pica')
+              .then((picaModule) => {
+                const Pica = picaModule.default;
+                return Pica()
+                  .resize(img, offScreenCanvas)
+                  .then(resizedCanvas => Pica().toBlob(resizedCanvas, 'image/jpeg', 0.90)); // Adjust the quality as needed
+              })
               .then(blob => {
                 // Now you have a resized image as a Blob, ready to upload
                 const userId = auth.currentUser.uid;
