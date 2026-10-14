@@ -59,13 +59,29 @@ Two Firestore collections:
 
 | Collection | Document ID | Fields |
 |------------|-------------|--------|
-| `events`   | auto (canonical event ID) | `content`, `shortDescription`, `longDescription`, `date` (Timestamp), `imageUrl`, `websiteUrl`, `location` (string or `{label}`), `id` (legacy numeric counter), `createdOn`, `author`, `emailOfAuthor` |
+| `events`   | auto (canonical event ID) | `content`, `shortDescription`, `longDescription`, `date` (Timestamp), `imageUrl`, `websiteUrl`, `location` (string or `{label}`), `id` (legacy numeric counter), `createdOn`, `author`, `emailOfAuthor` (**immutable** — set to the creator's email on write and can never be changed; security rules scope event update/delete to this field, see "Security rules" below) |
 | `users`    | user's email address | `name`, `email`, `photoURL`, `created_at`, `accountType` (`personal` / `business`), `interestedEvents` (array of event **document** IDs) |
 
 `events/id` is a legacy counter kept only as a sort key for older
 listings; new events rely on the Firestore document ID plus the
 `createdOn` server timestamp. A `counters/eventCounter` document is
 maintained transactionally so concurrent posters can't collide.
+
+### Security rules
+
+Events are public to read but **author-scoped to write** (issue #16):
+`firestore.rules` only lets the user whose email matches the event's
+`emailOfAuthor` update or delete it, requires a create to stamp
+`emailOfAuthor` with the writer's own email, and treats
+`emailOfAuthor` as immutable so ownership can't be reassigned by an
+edit. Rules are exercised by `firebase/firestore.rules.test.js` against
+the real rules engine (the CI `rules` job).
+
+**Legacy events:** events created before `emailOfAuthor` existed carry
+no owner claim and are fail-closed — no signed-in user can update or
+delete them until the field is backfilled. A one-off backfill (e.g. via
+the Firebase console or an admin script) is required to restore
+ownership of those documents.
 
 ## Development
 

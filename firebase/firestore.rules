@@ -3,8 +3,10 @@ rules_version = '2';
 // Firestore security rules for Clacton Events.
 //
 // Shape:
-//   /events/{eventId}   public read, authenticated write (any signed-in user
-//                       can list an event — that's the point of the app)
+//   /events/{eventId}   public read. Writes are author-scoped (issue #16):
+//                       only the user whose email is stored in the event's
+//                       `emailOfAuthor` field may update or delete it, and a
+//                       create must set that field to the writer's own email.
 //   /users/{email}      owner-only read/write. The document ID is the user's
 //                       email address, and the display name rendered on event
 //                       cards comes from the event's own `author` field, so no
@@ -25,12 +27,25 @@ service cloud.firestore {
 
     // ---- Events -------------------------------------------------------
     // Events are public content: anyone (including signed-out visitors) may
-    // read them. Creating or editing an event requires a signed-in user.
-    // (A signed-in user can currently edit *any* event; scoping writes to
-    // the author is a follow-up — see README "Known limitations".)
+    // read them. Writes are scoped to the author (issue #16): an event's
+    // `emailOfAuthor` field is set to the creator's email on write (see
+    // EventForm.handleSubmit), so only that user may update or delete the
+    // event. `emailOfAuthor` is immutable — an update may not change who
+    // owns the event, which is what makes the delete rule safe.
+    //
+    // Note: events created before `emailOfAuthor` existed have no owner
+    // claim and are therefore uneditable by anyone (fail-closed). A one-off
+    // backfill of that field is required to restore ownership of legacy
+    // events; see the "Legacy events" note in the README data model.
     match /events/{eventId} {
       allow get, list: if true;
-      allow create, update, delete: if request.auth != null;
+      allow create: if request.auth != null
+        && request.resource.data.emailOfAuthor == request.auth.token.email;
+      allow update: if request.auth != null
+        && request.auth.token.email == resource.data.emailOfAuthor
+        && request.resource.data.emailOfAuthor == resource.data.emailOfAuthor;
+      allow delete: if request.auth != null
+        && request.auth.token.email == resource.data.emailOfAuthor;
     }
 
     // ---- Users --------------------------------------------------------

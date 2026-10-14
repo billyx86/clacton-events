@@ -95,10 +95,41 @@ async function main() {
     anon.collection('events').doc('test-event-1').update({ content: 'hacked' }), 'fails');
   await check('anonymous CANNOT delete an event',
     anon.collection('events').doc('test-event-1').delete(), 'fails');
-  await check('signed-in user CAN create an event',
-    alice.collection('events').doc('alice-event').set({ content: 'Alice event' }), 'succeeds');
-  await check('signed-in user CAN update an event',
-    bob.collection('events').doc('alice-event').update({ content: 'Bob edited' }), 'succeeds');
+
+  console.log('\nEvent writes scoped to the author (issue #16):');
+  // Creates must stamp the writer's own email as the author — an event
+  // cannot be created on someone else's behalf or without an owner.
+  await check('Alice CAN create an event stamped with her own email',
+    alice.collection('events').doc('alice-event').set({ content: 'Alice event', emailOfAuthor: ALICE }), 'succeeds');
+  await check('Alice CANNOT create an event claiming Bob as author',
+    alice.collection('events').doc('spoofed').set({ content: 'x', emailOfAuthor: BOB }), 'fails');
+  await check('Alice CANNOT create an event with no emailOfAuthor',
+    alice.collection('events').doc('ownerless').set({ content: 'x' }), 'fails');
+  // Updates and deletes are author-only, and the ownership field is
+  // immutable (an update may not reassign the event to a different user).
+  await check('Alice CAN update her own event',
+    alice.collection('events').doc('test-event-1').update({ content: 'Alice edited' }), 'succeeds');
+  await check("Bob CANNOT update Alice's event",
+    bob.collection('events').doc('test-event-1').update({ content: 'Bob hacked' }), 'fails');
+  await check("Bob CANNOT delete Alice's event",
+    bob.collection('events').doc('test-event-1').delete(), 'fails');
+  await check('author CANNOT reassign ownership by editing emailOfAuthor',
+    alice.collection('events').doc('test-event-1').update({ emailOfAuthor: BOB }), 'fails');
+  // A legacy event predating the emailOfAuthor field (seeded against the
+  // live emulator with the rules disabled, as a backfill script would): no
+  // owner claim, so fail-closed — nobody may update or delete it until it
+  // is backfilled.
+  await testEnv.withSecurityRulesDisabled(async (adminCtx) => {
+    const admin = adminCtx.firestore();
+    await admin.collection('events').doc('legacy-event').set({ content: 'Legacy event' });
+  });
+  await check('ownerless legacy event CANNOT be updated',
+    alice.collection('events').doc('legacy-event').update({ content: 'x' }), 'fails');
+  await check('ownerless legacy event CANNOT be deleted',
+    alice.collection('events').doc('legacy-event').delete(), 'fails');
+  // The author CAN delete her own event (alice-event is disposable here).
+  await check('Alice CAN delete her own event',
+    alice.collection('events').doc('alice-event').delete(), 'succeeds');
 
   console.log('\nUsers collection:');
   await check('anonymous CANNOT list users',
