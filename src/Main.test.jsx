@@ -33,6 +33,7 @@ vi.mock('./firebase', () => ({
 // --- firebase/firestore: safe empty-data stubs.
 vi.mock('firebase/firestore', () => ({
   arrayUnion: vi.fn(),
+  arrayRemove: vi.fn(),
   collection: vi.fn(),
   doc: vi.fn(),
   getDoc: vi.fn().mockResolvedValue({ exists: () => false, data: () => ({}) }),
