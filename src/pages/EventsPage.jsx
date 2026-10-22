@@ -34,6 +34,13 @@ const EventsPage = () => {
     // Newest-first on the server; the client only filters what it already
     // has. Past events can only appear in the *loaded* window (the form
     // requires future dates, so the collection is mostly upcoming).
+    //
+    // #22: the UI copy now states that scope honestly ("Filter loaded
+    // events…" + the hint line) instead of the old "Search events..."
+    // placeholder that implied collection-wide search. The filtering logic
+    // itself is unchanged — it already covers the full *loaded* set; making
+    // it truly collection-wide needs a server-side search path (no native
+    // full-text search in Firestore), which is deliberately out of scope.
     const buildQuery = useCallback((cursor) => {
         const constraints = [
             orderBy('createdOn', 'desc'),
@@ -105,7 +112,15 @@ const EventsPage = () => {
         <main>
             <div className="search-wrapper">
                 <div className="search-container">
-                    <input type="text" placeholder="Search events..." onChange={handleSearchInput}/>
+                    <input
+                        type="text"
+                        placeholder="Filter loaded events…"
+                        aria-label="Filter loaded events"
+                        onChange={handleSearchInput}
+                    />
+                    <p className="search-scope-hint" data-testid="search-scope-hint">
+                        Filters the events loaded so far — use Load more to search further back.
+                    </p>
                 </div>
             </div>
 
