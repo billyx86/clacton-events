@@ -1,7 +1,11 @@
 # dependencies
 /node_modules
+functions/node_modules
 /.pnp
 .pnp.js
+
+# Cloud Functions (firebase-tools 15+ reads a .env in the functions dir)
+functions/.env
 
 # testing
 /coverage

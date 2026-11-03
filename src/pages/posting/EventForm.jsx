@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { resolveAuthorName } from '../../utils/authorName';
+import { buildSearchIndex } from '../../utils/searchTokens';
 
 import '../../styles/posting/EventForm.css'
 
@@ -210,7 +211,17 @@ const EventForm = () => {
                 date: eventDate,
                 createdOn: serverTimestamp(),
                 author: loggedInName,
-                emailOfAuthor: user.email
+                emailOfAuthor: user.email,
+                // issue #26: denormalised search index (tokenised title /
+                // descriptions / location) maintained at write time. It
+                // backs the server-side `array-contains-any` search in
+                // EventsPage.
+                searchIndex: buildSearchIndex({
+                    content: formData.content,
+                    shortDescription: formData.shortDescription,
+                    longDescription: formData.longDescription,
+                    location: eventLocation,
+                }),
             };
 
             const newEventRef = doc(collection(db, "events"));

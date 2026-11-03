@@ -27,6 +27,26 @@ jobs:
           name: production-build
           path: dist/
 
+  functions:
+    name: Cloud Functions (public feed)
+    runs-on: ubuntu-latest
+    # The feed's unit tests are pure: feedShaper.test.js has no
+    # dependencies at all, and feedHandler.test.js mocks the
+    # firebase-admin surface. No emulator/JVM — plain Node is enough.
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: functions/package-lock.json
+      - name: Install functions dependencies
+        working-directory: functions
+        run: npm ci --no-audit --no-fund
+      - name: Feed unit tests
+        working-directory: functions
+        run: npm test
+
   rules:
     name: Firestore security rules
     runs-on: ubuntu-latest
