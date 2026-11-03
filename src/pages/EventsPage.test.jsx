@@ -9,6 +9,12 @@ import EventsPage from './EventsPage.jsx';
 // vi.hoisted keeps the mutable handle above the hoisted vi.mock factories.
 const { mockAuth } = vi.hoisted(() => ({ mockAuth: { cb: null } }));
 
+// A fixed "now" for the server-side date filter (issue #27). All test
+// events are dated 2030-06-01 (or later), so with now = 2030-01-01 every
+// document is upcoming and the date-ascending order matches the given
+// page order (all dates equal → stable server order).
+const fakeNow = new Date('2030-01-01T00:00:00Z');
+
 vi.mock('../firebase', () => ({
   auth: {},
   db: {},
@@ -30,6 +36,8 @@ vi.mock('firebase/firestore', () => ({
   orderBy: vi.fn((field, dir) => ({ orderBy: [field, dir] })),
   query: vi.fn((...args) => ({ type: 'query', args })),
   startAfter: vi.fn((cursor) => ({ startAfter: cursor })),
+  Timestamp: { now: vi.fn(() => fakeNow) },
+  where: vi.fn((field, op, value) => ({ where: [field, op, value] })),
 }));
 
 // Isolate from the real Event component (its CSS import + navigate side
@@ -43,7 +51,8 @@ vi.mock('../components/Event', () => ({
 }));
 
 // A Firestore-style doc snapshot whose data() yields the fields toEvent()
-// spreads. Dates are far in the future so isEventUpcoming keeps them.
+// spreads. Dates are far in the future so they survive the server-side
+// upcoming filter (issue #27).
 const futureDate = () => new Date('2030-06-01T12:00:00Z');
 
 const makeDoc = (id, { title, description = '', longDescription = '' }) => ({
@@ -54,6 +63,7 @@ const makeDoc = (id, { title, description = '', longDescription = '' }) => ({
     longDescription,
     location: {},
     date: futureDate(),
+    createdOn: futureDate(),
     id: Number(id.replace(/\D/g, '')) || 0,
   }),
 });
@@ -95,10 +105,110 @@ const queuePages = (pages) => {
   });
 };
 
+// The constraints array of the n-th getDocs call (args[0] is the collection).
+const nthQueryArgs = (n) => vi.mocked(getDocs).mock.calls[n - 1][0].args;
+
 beforeEach(() => {
   vi.clearAllMocks();
   mockAuth.cb = null;
 });
+
+// ---------------------------------------------------------------------------
+// issue #27 — upcoming-only default with a server-side date filter
+// ---------------------------------------------------------------------------
+
+describe('upcoming-only default view (issue #27)', () => {
+  test('the default view applies where(date >= now) + orderBy(date asc) server-side', async () => {
+    queuePages([[], []]);
+    renderPage();
+
+    await waitFor(() => expect(getDocs).toHaveBeenCalledTimes(1));
+    const args = nthQueryArgs(1);
+    // Same field as the where clause → no composite index required.
+    expect(args).toEqual([
+      expect.anything(),
+      { where: ['date', '>=', fakeNow] },
+      { orderBy: ['date', 'asc'] },
+      { limit: 20 },
+    ]);
+  });
+
+  test('the upcoming view lists events and hides the past toggle from the data path', async () => {
+    const { page1, page2 } = buildAllDocs();
+    queuePages([page1, page2]);
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getAllByTestId('event-title')).toHaveLength(20)
+    );
+  });
+
+  test('toggling "Show past events" re-queries with no date constraint, newest-posted first', async () => {
+    const { page1, page2 } = buildAllDocs();
+    queuePages([page1, page1, page2]); // call 1: init, call 2: toggle, call 3: load more
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getAllByTestId('event-title')).toHaveLength(20)
+    );
+
+    const toggle = screen.getByRole('checkbox');
+    fireEvent.click(toggle);
+
+    await waitFor(() => expect(getDocs).toHaveBeenCalledTimes(2));
+    const args = nthQueryArgs(2);
+    // No where clause at all — past events are in scope — and the sort
+    // falls back to createdOn desc (the pre-#27 order).
+    expect(args).toEqual([
+      expect.anything(),
+      { orderBy: ['createdOn', 'desc'] },
+      { limit: 20 },
+    ]);
+  });
+
+  test('un-toggling returns to the server-side upcoming query', async () => {
+    const { page1 } = buildAllDocs();
+    queuePages([page1, page1, page1]);
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getAllByTestId('event-title')).toHaveLength(20)
+    );
+
+    const toggle = screen.getByRole('checkbox');
+    fireEvent.click(toggle);
+    await waitFor(() => expect(getDocs).toHaveBeenCalledTimes(2));
+    fireEvent.click(toggle);
+    await waitFor(() => expect(getDocs).toHaveBeenCalledTimes(3));
+
+    expect(nthQueryArgs(3)).toEqual([
+      expect.anything(),
+      { where: ['date', '>=', fakeNow] },
+      { orderBy: ['date', 'asc'] },
+      { limit: 20 },
+    ]);
+  });
+
+  test('Load more in the upcoming view passes startAfter on the last event date', async () => {
+    const { page1, page2 } = buildAllDocs();
+    queuePages([page1, page2]);
+    renderPage();
+
+    await waitFor(() =>
+      expect(screen.getAllByTestId('event-title')).toHaveLength(20)
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /load more events/i }));
+
+    await waitFor(() => expect(getDocs).toHaveBeenCalledTimes(2));
+    const lastDate = page1[page1.length - 1].data().date;
+    expect(nthQueryArgs(2)).toContainEqual({ startAfter: lastDate });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// issue #22 — client-side filter scope (unchanged contract)
+// ---------------------------------------------------------------------------
 
 test('search is scoped to loaded events — hint is always visible and the old placeholder is gone (issue #22)', () => {
   queuePages([[], []]);
