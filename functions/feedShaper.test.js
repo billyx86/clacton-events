@@ -40,6 +40,31 @@ describe('dateToMillis', () => {
     expect(dateToMillis({ seconds })).toBe(seconds * 1000);
   });
 
+  test('includes the nanoseconds field of a Firestore-style Timestamp (#32)', () => {
+    const seconds = Math.floor(
+      new Date('2030-06-01T12:00:00Z').getTime() / 1000
+    );
+    // 123456789 nanoseconds = 123.456789 ms -> 123 whole milliseconds.
+    expect(dateToMillis({ seconds, nanoseconds: 123456789 })).toBe(
+      seconds * 1000 + 123
+    );
+    // Sub-millisecond nanoseconds round down to 0.
+    expect(dateToMillis({ seconds, nanoseconds: 999999 })).toBe(seconds * 1000);
+    // Missing / zero nanoseconds behave exactly as before the fix.
+    expect(dateToMillis({ seconds, nanoseconds: 0 })).toBe(seconds * 1000);
+  });
+
+  test('orders same-second events by their nanosecond component (#32)', () => {
+    const seconds = Math.floor(
+      new Date('2030-06-01T12:00:00Z').getTime() / 1000
+    );
+    const earlier = dateToMillis({ seconds, nanoseconds: 10000000 }); // +10 ms
+    const later = dateToMillis({ seconds, nanoseconds: 90000000 }); // +90 ms
+    expect(earlier).toBeLessThan(later);
+    expect(earlier).toBe(seconds * 1000 + 10);
+    expect(later).toBe(seconds * 1000 + 90);
+  });
+
   test('handles plain Date and ISO string values', () => {
     expect(dateToMillis(new Date('2030-06-01T00:00:00Z'))).toBe(
       new Date('2030-06-01T00:00:00Z').getTime()
@@ -218,5 +243,20 @@ describe('buildFeed', () => {
       { siteOrigin: origin, now: fixedNow }
     );
     expect(feed.events[0].date).toBe('2030-06-01T00:00:00.000Z');
+  });
+
+  test('orders same-second events deterministically by nanoseconds (#32)', () => {
+    const seconds = Math.floor(new Date('2030-06-01T12:00:00Z').getTime() / 1000);
+    const feed = buildFeed(
+      [
+        doc('later', { content: 'Later', date: { seconds, nanoseconds: 90000000 } }),
+        doc('undated', { content: 'U' }),
+        doc('earlier', { content: 'Earlier', date: { seconds, nanoseconds: 10000000 } }),
+      ],
+      { siteOrigin: origin, now: fixedNow }
+    );
+    expect(feed.events.map((e) => e.id)).toEqual(['earlier', 'later', 'undated']);
+    expect(feed.events[0].date).toBe('2030-06-01T12:00:00.010Z');
+    expect(feed.events[1].date).toBe('2030-06-01T12:00:00.090Z');
   });
 });

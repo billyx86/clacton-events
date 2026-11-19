@@ -46,6 +46,11 @@ export const locationLabel = (location) => {
  * Millisecond epoch value of a Firestore date field: a Timestamp
  * (anything with `.toDate()`), a `{ seconds }` object, or a plain
  * Date/string. Returns null when the value is missing or unparseable.
+ *
+ * A `{ seconds }` object may also carry a `nanoseconds` field (Firestore
+ * Timestamp shape): its millisecond component is included (#32) so two
+ * events within the same second keep a deterministic feed order instead
+ * of collapsing onto the same ISO timestamp.
  */
 export const dateToMillis = (date) => {
   if (date == null) return null;
@@ -54,7 +59,12 @@ export const dateToMillis = (date) => {
     return Number.isNaN(t) ? null : t;
   }
   if (typeof date.seconds === 'number') {
-    return date.seconds * 1000;
+    // (#32) sub-second component of a Firestore Timestamp.
+    const millis =
+      typeof date.nanoseconds === 'number' && date.nanoseconds >= 0
+        ? Math.floor(date.nanoseconds / 1e6)
+        : 0;
+    return date.seconds * 1000 + millis;
   }
   const t = new Date(date).getTime();
   return Number.isNaN(t) ? null : t;
